@@ -1,0 +1,3858 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>霍尔木兹海峡通行仪表盘</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --paper: rgba(255, 251, 244, 0.92);
+      --panel: rgba(255, 248, 238, 0.8);
+      --ink: #13212d;
+      --muted: #5d6f7f;
+      --line: rgba(19, 33, 45, 0.1);
+      --sea: #0f4f73;
+      --sea-soft: #d9edf6;
+      --amber: #d57f2a;
+      --amber-soft: #f3dfc6;
+      --red: #b4473c;
+      --red-soft: #f4d7d3;
+      --green: #2f7c63;
+      --green-soft: #d6ece3;
+      --shadow: 0 22px 48px rgba(42, 34, 21, 0.12);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 14px;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      font-family: 'Source Han Sans', 'Noto Sans CJK SC', sans-serif;
+    }
+
+    html, body {
+      margin: 0;
+      min-height: 100%;
+      background:
+        radial-gradient(circle at 8% 12%, rgba(15, 79, 115, 0.12), transparent 26%),
+        radial-gradient(circle at 92% 0%, rgba(213, 127, 42, 0.1), transparent 28%),
+        linear-gradient(180deg, #f7f2ea 0%, #f4efe6 100%);
+      color: var(--ink);
+      font-family: 'Source Han Sans', 'Noto Sans CJK SC', sans-serif;
+      line-height: 1.5;
+    }
+
+    body {
+      padding: 18px;
+    }
+
+    .page {
+      max-width: 1340px;
+      margin: 0 auto;
+      display: grid;
+      gap: 16px;
+    }
+
+    .hero {
+      position: relative;
+      overflow: hidden;
+      border-radius: 32px;
+      padding: 28px 30px 26px;
+      color: #f7fbff;
+      background:
+        linear-gradient(125deg, rgba(13, 44, 64, 0.98), rgba(19, 76, 108, 0.92) 44%, rgba(121, 67, 29, 0.92) 100%);
+      box-shadow: 0 26px 56px rgba(14, 28, 41, 0.22);
+    }
+
+    .hero::before,
+    .hero::after {
+      content: "";
+      position: absolute;
+      border-radius: 999px;
+      pointer-events: none;
+    }
+
+    .hero::before {
+      width: 240px;
+      height: 240px;
+      right: -40px;
+      top: -50px;
+      background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.22), rgba(255, 255, 255, 0));
+    }
+
+    .hero::after {
+      width: 280px;
+      height: 280px;
+      left: -100px;
+      bottom: -120px;
+      background: radial-gradient(circle at 50% 50%, rgba(213, 127, 42, 0.18), rgba(213, 127, 42, 0));
+    }
+
+    .hero-top {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .hero h1 {
+      margin: 0;
+      font-size: clamp(32px, 4.8vw, 58px);
+      line-height: 0.98;
+      letter-spacing: 0.01em;
+    }
+
+    .hero p {
+      margin: 14px 0 0;
+      max-width: 880px;
+      font-size: clamp(14px, 1.6vw, 18px);
+      color: rgba(241, 248, 255, 0.84);
+    }
+
+    .tag-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 18px;
+    }
+
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      font-size: 13px;
+      backdrop-filter: blur(4px);
+    }
+
+    .market-ticker {
+      margin-top: 12px;
+      border-radius: 16px;
+      border: 1px solid rgba(19, 33, 45, 0.12);
+      background: rgba(255, 255, 255, 0.88);
+      overflow: hidden;
+      box-shadow: var(--shadow);
+    }
+
+    .market-track {
+      display: flex;
+      width: max-content;
+      animation: marketTickerScroll 22s linear infinite;
+      will-change: transform;
+    }
+
+    .market-ticker:hover .market-track {
+      animation-play-state: paused;
+    }
+
+    .market-segment {
+      display: flex;
+      align-items: center;
+      gap: 0;
+    }
+
+    .market-item {
+      display: inline-flex;
+      align-items: baseline;
+      gap: 8px;
+      padding: 10px 16px;
+      color: #1f3445;
+      text-decoration: none;
+      border-right: 1px solid rgba(19, 33, 45, 0.1);
+      white-space: nowrap;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .market-item:hover {
+      background: rgba(15, 79, 115, 0.08);
+    }
+
+    .market-item .name {
+      font-weight: 700;
+      color: #2a3f50;
+    }
+
+    .market-item .price {
+      font-weight: 700;
+      color: #1f3445;
+    }
+
+    .market-item .chg {
+      font-weight: 800;
+      color: var(--red);
+    }
+
+    .market-item .chg.down {
+      color: var(--green);
+    }
+
+    @keyframes marketTickerScroll {
+      0% {
+        transform: translateX(0);
+      }
+      100% {
+        transform: translateX(-50%);
+      }
+    }
+
+    .panel h2,
+    .panel h3,
+    .hero h2 {
+      margin: 0;
+      font-size: 17px;
+      letter-spacing: 0.01em;
+    }
+
+    .full-span {
+      grid-column: 1 / -1;
+    }
+
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      align-items: stretch;
+      gap: 14px;
+    }
+
+    .metric {
+      min-height: 0;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(255, 246, 235, 0.92));
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      box-shadow: var(--shadow);
+      padding: 18px;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .metric::after {
+      content: "";
+      position: absolute;
+      right: -28px;
+      bottom: -28px;
+      width: 110px;
+      height: 110px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 32% 32%, rgba(15, 79, 115, 0.11), rgba(15, 79, 115, 0));
+    }
+
+    .summary .metric.gauge-card {
+      --gauge-rgb: 15, 79, 115;
+      aspect-ratio: 1 / 1;
+      border-radius: 50%;
+      padding: 44px 42px 32px;
+      background:
+        radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.98), rgba(252, 247, 240, 0.96) 62%, rgba(239, 231, 219, 0.92) 100%);
+      border: 1px solid rgba(181, 198, 212, 0.9);
+      box-shadow:
+        inset 0 0 0 10px rgba(255, 255, 255, 0.58),
+        0 12px 30px rgba(22, 48, 67, 0.1);
+      overflow: hidden;
+    }
+
+    .summary .metric.gauge-card::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border-radius: 50%;
+      pointer-events: none;
+      background:
+        conic-gradient(
+          from -90deg,
+          rgba(var(--gauge-rgb), 0.24) 0deg,
+          rgba(var(--gauge-rgb), 0.1) 180deg,
+          rgba(var(--gauge-rgb), 0.24) 360deg
+        );
+      -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+      mask: radial-gradient(farthest-side, transparent calc(100% - 9px), #000 calc(100% - 8px));
+    }
+
+    .summary .metric.gauge-card::after {
+      content: "";
+      position: absolute;
+      inset: 26px;
+      width: auto;
+      height: auto;
+      border-radius: 50%;
+      background: none;
+      border: 2px solid rgba(255, 255, 255, 0.9);
+      pointer-events: none;
+    }
+
+    .summary .metric.gauge-card > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    .summary .metric.gauge-realtime::before {
+      --gauge-rgb: 47, 124, 255;
+    }
+
+    .summary .metric.gauge-source::before {
+      --gauge-rgb: 49, 155, 88;
+    }
+
+    .summary .metric.gauge-stress {
+      --gauge-rgb: 226, 138, 81;
+      padding: 46px 36px 26px;
+      overflow: visible;
+      z-index: 6;
+    }
+
+    .summary .metric.gauge-stress::before {
+      background:
+        conic-gradient(
+          from 212deg,
+          rgba(221, 79, 69, 0.95) 0deg 62deg,
+          rgba(231, 109, 80, 0.92) 62deg 96deg,
+          rgba(238, 146, 96, 0.9) 96deg 138deg,
+          rgba(244, 184, 126, 0.82) 138deg 170deg,
+          rgba(236, 170, 112, 0.38) 170deg 196deg,
+          transparent 196deg 346deg,
+          rgba(237, 171, 113, 0.46) 346deg 360deg
+        );
+    }
+
+    .summary .metric.gauge-stress .metric-help-floating {
+      top: 12px;
+      right: 12px;
+      z-index: 30;
+    }
+
+    .summary .metric.gauge-stress .metric-help-panel {
+      width: min(320px, calc(100% - 28px));
+      right: 0;
+      z-index: 31;
+    }
+
+    .summary .metric.gauge-stress .metric-help-trigger {
+      background: rgba(248, 252, 255, 0.98);
+      border-color: rgba(36, 66, 86, 0.42);
+      box-shadow: 0 2px 8px rgba(26, 48, 64, 0.18);
+      color: #1f3d52;
+    }
+
+    .summary .metric.gauge-stress .metric-label {
+      margin-top: 2px;
+    }
+
+    .summary .metric.gauge-stress .metric-value {
+      margin-top: 8px;
+      font-size: clamp(44px, 3.2vw, 56px);
+      line-height: 0.95;
+    }
+
+    .summary .metric.gauge-card .metric-label {
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.01em;
+      color: #163245;
+      line-height: 1.2;
+    }
+
+    .summary .metric.gauge-card .metric-value {
+      margin-top: 12px;
+      font-size: clamp(40px, 3.2vw, 52px);
+    }
+
+    .summary .metric.gauge-realtime .realtime-headline {
+      margin-top: 8px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .summary .metric.gauge-realtime .realtime-now-value {
+      font-size: clamp(42px, 3.2vw, 50px);
+      line-height: 1;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .summary .metric.gauge-realtime .realtime-now-label {
+      margin-top: 2px;
+      font-size: 12px;
+      color: #3f5568;
+      font-weight: 700;
+    }
+
+    .summary .metric.gauge-realtime .realtime-now {
+      text-align: center;
+    }
+
+    .summary .metric.gauge-realtime .realtime-change-box {
+      text-align: center;
+    }
+
+    .summary .metric.gauge-realtime .realtime-change-label {
+      font-size: 12px;
+      color: #3f5568;
+      font-weight: 700;
+      margin-bottom: 3px;
+    }
+
+    .summary .metric.gauge-realtime .realtime-core {
+      margin-top: 8px;
+      display: grid;
+      grid-template-columns: 94px minmax(86px, 1fr) minmax(136px, 1fr);
+      gap: 9px;
+      align-items: center;
+    }
+
+    .summary .metric.gauge-realtime .realtime-rings {
+      position: relative;
+      width: 94px;
+      height: 94px;
+      border-radius: 50%;
+      background: rgba(233, 239, 246, 0.45);
+    }
+
+    .summary .metric.gauge-realtime .realtime-rings .ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 6px solid transparent;
+      transform: rotate(-36deg);
+    }
+
+    .summary .metric.gauge-realtime .realtime-rings .ring.r1 {
+      inset: 0;
+      border-left-color: #dc4a54;
+      border-top-color: #dc4a54;
+      border-bottom-color: #dc4a54;
+    }
+
+    .summary .metric.gauge-realtime .realtime-rings .ring.r2 {
+      inset: 12px;
+      border-left-color: #f0b12d;
+      border-top-color: #f0b12d;
+      border-bottom-color: #f0b12d;
+    }
+
+    .summary .metric.gauge-realtime .realtime-rings .ring.r3 {
+      inset: 24px;
+      border-left-color: #2f7cff;
+      border-bottom-color: #2f7cff;
+    }
+
+    .summary .metric.gauge-realtime .realtime-rings .ring.r4 {
+      inset: 36px;
+      border: 5px solid rgba(196, 208, 220, 0.72);
+      transform: none;
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-main {
+      text-align: center;
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-value {
+      font-size: clamp(52px, 3.8vw, 64px);
+      line-height: 0.95;
+      font-weight: 800;
+      color: #2f7f66;
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-value.rise {
+      color: var(--red);
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-value.fall {
+      color: var(--green);
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-value.flat-tone {
+      color: #2f7f66;
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-label {
+      font-size: 13px;
+      color: #253b4c;
+      font-weight: 700;
+    }
+
+    .summary .metric.gauge-realtime .realtime-stranded-change-below {
+      margin-top: 6px;
+      display: inline-flex;
+      justify-content: center;
+    }
+
+    .summary .metric.gauge-realtime .realtime-breakdown-compact {
+      display: grid;
+      gap: 6px;
+      font-size: 12px;
+      color: #2b4051;
+    }
+
+    .summary .metric.gauge-realtime .rb-title {
+      font-size: 12px;
+      font-weight: 700;
+      color: #375064;
+      margin-bottom: 1px;
+    }
+
+    .summary .metric.gauge-realtime .rb-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+    }
+
+    .summary .metric.gauge-realtime .rb-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 7px;
+      min-width: 0;
+    }
+
+    .summary .metric.gauge-realtime .rb-name {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .summary .metric.gauge-realtime .realtime-meta {
+      margin-top: 8px;
+      gap: 5px;
+      font-size: 12px;
+    }
+
+    .summary .metric.gauge-realtime .realtime-monitor-title {
+      margin: 2px 0;
+      font-size: 16px;
+      font-weight: 800;
+      text-align: center;
+      color: #142a39;
+      line-height: 1.2;
+    }
+
+    .summary .metric.gauge-source .metric-multi {
+      margin-top: 16px;
+      gap: 10px;
+    }
+
+    .summary .metric.gauge-source .metric-multi-item {
+      border-radius: 28px;
+      min-height: 122px;
+      padding: 10px 7px 9px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .summary .metric.gauge-source .metric-sub {
+      margin-top: 12px;
+      font-size: 12px;
+      line-height: 1.4;
+    }
+
+    .summary .metric.gauge-source {
+      justify-content: center;
+    }
+
+    .summary .metric.gauge-stress .stress-rank {
+      margin: 8px auto 0;
+      gap: 4px;
+      max-width: 340px;
+    }
+
+    .summary .metric.gauge-stress .stress-rank-row {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 9px;
+    }
+
+    .summary .metric.gauge-stress .stress-rank-index {
+      width: 16px;
+      height: 16px;
+      font-size: 10px;
+    }
+
+    .summary .metric.gauge-stress .stress-rank-head {
+      margin-top: 6px;
+      font-size: 11px;
+    }
+
+    .summary .metric.gauge-stress .metric-sub {
+      margin-top: 6px;
+      font-size: 11px;
+    }
+
+    .summary .metric.gauge-stress .stress-rank-name {
+      font-size: 12px;
+    }
+
+    .metric-label {
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      text-align: center;
+    }
+
+    .metric-value {
+      margin-top: 18px;
+      font-size: clamp(38px, 3vw, 46px);
+      line-height: 1;
+      font-weight: 800;
+      text-align: center;
+    }
+
+    .metric-value.rise {
+      color: var(--red);
+    }
+
+    .metric-value.fall {
+      color: var(--green);
+    }
+
+    .metric-value.flat-tone {
+      color: var(--amber);
+    }
+
+    .metric-sub {
+      margin-top: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      font-size: 13px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .stress-formula {
+      display: none;
+    }
+
+    .metric-help-floating {
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      z-index: 3;
+    }
+
+    .metric-help-trigger {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 1px solid rgba(19, 33, 45, 0.22);
+      background: rgba(255, 255, 255, 0.92);
+      color: #244255;
+      font-size: 13px;
+      font-weight: 800;
+      line-height: 1;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: help;
+      user-select: none;
+    }
+
+    .metric-help-panel {
+      position: absolute;
+      top: 28px;
+      right: 0;
+      width: min(420px, calc(100vw - 34px));
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid rgba(19, 33, 45, 0.14);
+      background: rgba(255, 255, 255, 0.98);
+      color: #1f3547;
+      box-shadow: 0 12px 28px rgba(10, 30, 45, 0.16);
+      font-size: 11px;
+      line-height: 1.55;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(6px);
+      transition: opacity 0.18s ease, transform 0.18s ease, visibility 0.18s ease;
+    }
+
+    .metric-help-panel strong {
+      color: #123247;
+      font-size: 12px;
+    }
+
+    .metric-help-panel .formula-line {
+      margin-top: 6px;
+    }
+
+    .metric-help-panel .formula-current {
+      margin-top: 6px;
+      color: #4c6375;
+    }
+
+    .metric-help-floating:hover .metric-help-panel,
+    .metric-help-floating:focus-within .metric-help-panel {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .realtime-meta {
+      margin-top: 10px;
+      display: grid;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .realtime-meta-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+      text-align: center;
+    }
+
+    .realtime-kpis {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 8px;
+    }
+
+    .realtime-kpi {
+      border: 1px solid rgba(19, 33, 45, 0.1);
+      background: rgba(255, 255, 255, 0.74);
+      border-radius: 12px;
+      padding: 10px 10px 8px;
+      text-align: center;
+    }
+
+    .realtime-kpi-label {
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.2;
+    }
+
+    .realtime-kpi-line {
+      margin-top: 4px;
+      display: flex;
+      align-items: baseline;
+      justify-content: center;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .realtime-kpi-value {
+      margin-top: 4px;
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .realtime-kpi-line .realtime-kpi-value {
+      margin-top: 0;
+    }
+
+    .realtime-kpi-change {
+      padding: 4px 8px;
+      font-size: 11px;
+      line-height: 1.1;
+    }
+
+    .realtime-kpi-value.rise {
+      color: var(--red);
+    }
+
+    .realtime-kpi-value.fall {
+      color: var(--green);
+    }
+
+    .realtime-kpi-value.flat-tone {
+      color: var(--amber);
+    }
+
+    .stranded-breakdown {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+      max-width: 300px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .stranded-block {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid rgba(19, 33, 45, 0.1);
+    }
+
+    .stranded-title {
+      margin: 0 0 6px;
+      font-size: 12px;
+      color: #4a6172;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      text-align: center;
+    }
+
+    .stranded-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 13px;
+      color: #2b4051;
+    }
+
+    .stranded-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .stranded-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .stranded-dot.tankers {
+      background: #ff4d57;
+    }
+
+    .stranded-dot.bulk {
+      background: #ffc226;
+    }
+
+    .stranded-dot.other {
+      background: #2f7cff;
+    }
+
+    .metric-multi {
+      margin-top: 12px;
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .metric.multi-source-card {
+      justify-content: flex-start;
+    }
+
+    .metric.multi-source-card .metric-multi {
+      margin-top: 26px;
+    }
+
+    .metric.multi-source-card .metric-sub {
+      margin-top: 14px;
+      padding-top: 0;
+    }
+
+    .metric-multi-item {
+      border: 1px solid rgba(19, 33, 45, 0.1);
+      background: rgba(255, 255, 255, 0.72);
+      border-radius: 12px;
+      padding: 8px 8px 7px;
+      text-align: center;
+    }
+
+    .metric-multi-name {
+      font-size: 9px;
+      color: var(--muted);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .metric-multi-value {
+      margin-top: 2px;
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 800;
+      color: var(--ink);
+    }
+
+    .metric-multi-date {
+      margin-top: 4px;
+      font-size: 10px;
+      color: #5f7384;
+      white-space: nowrap;
+    }
+
+    .metric-multi-change {
+      margin-top: 3px;
+      font-size: 11px;
+      line-height: 1.2;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .stress-rank {
+      margin-top: 10px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .stress-rank-head {
+      margin-top: 8px;
+      font-size: 12px;
+      color: #4a6172;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    .stress-rank-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 6px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      font-size: 12px;
+      line-height: 1.25;
+      color: #254155;
+    }
+
+    .stress-rank-left {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .stress-rank-index {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(15, 79, 115, 0.12);
+      color: #1d4f6e;
+      font-size: 11px;
+      font-weight: 700;
+      flex: 0 0 auto;
+    }
+
+    .stress-rank-name {
+      font-weight: 700;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .stress-rank-value {
+      font-weight: 700;
+      color: #b4473c;
+      white-space: nowrap;
+      flex: 0 0 auto;
+    }
+
+    .flash-panel {
+      border-radius: 22px;
+      border: 1px solid rgba(19, 33, 45, 0.1);
+      background:
+        radial-gradient(circle at 92% 0%, rgba(15, 79, 115, 0.08), transparent 32%),
+        linear-gradient(180deg, rgba(252, 255, 255, 0.94), rgba(248, 251, 255, 0.9));
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .flash-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 16px 22px 12px;
+      border-bottom: 1px solid rgba(19, 33, 45, 0.08);
+      flex-wrap: wrap;
+    }
+
+    .flash-head h2 {
+      margin: 0;
+      font-size: 20px;
+      line-height: 1.1;
+      letter-spacing: 0.01em;
+      color: #0f2a3c;
+    }
+
+    .flash-head p {
+      margin: 6px 0 0;
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .flash-list {
+      padding: 2px 22px 8px;
+    }
+
+    .flash-date-tags {
+      padding: 10px 22px 2px;
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .flash-date-tag {
+      border-radius: 999px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      border: 1px solid rgba(19, 33, 45, 0.16);
+      background: rgba(255, 255, 255, 0.84);
+      color: #264054;
+      cursor: pointer;
+    }
+
+    .flash-date-tag.active {
+      background: #0f4f73;
+      border-color: #0f4f73;
+      color: #f6fbff;
+    }
+
+    .flash-item {
+      padding: 11px 0 10px;
+      border-bottom: 1px solid rgba(19, 33, 45, 0.08);
+    }
+
+    .flash-item:last-child {
+      border-bottom: none;
+    }
+
+    .flash-text {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.55;
+      color: #1d2f3e;
+      font-weight: 450;
+    }
+
+    .flash-text .hl {
+      color: #2f69ff;
+      font-weight: 700;
+    }
+
+    .flash-meta {
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #6b7d8c;
+    }
+
+    .flash-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #0f4f73;
+      box-shadow: 0 0 0 3px rgba(15, 79, 115, 0.12);
+    }
+
+    .flash-pagination {
+      padding: 2px 22px 14px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .flash-nav {
+      border: 1px solid rgba(19, 33, 45, 0.16);
+      background: rgba(255, 255, 255, 0.84);
+      color: #264054;
+      border-radius: 999px;
+      width: 30px;
+      height: 30px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      font-size: 17px;
+      font-weight: 700;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .flash-nav:hover {
+      background: rgba(239, 247, 252, 0.95);
+      border-color: rgba(15, 79, 115, 0.36);
+    }
+
+    .flash-nav:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .flash-dots {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .flash-page-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      border: 1px solid rgba(15, 79, 115, 0.35);
+      background: rgba(15, 79, 115, 0.12);
+      cursor: pointer;
+      padding: 0;
+    }
+
+    .flash-page-dot.active {
+      background: #0f4f73;
+      border-color: #0f4f73;
+      box-shadow: 0 0 0 3px rgba(15, 79, 115, 0.12);
+    }
+
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .pill.up {
+      color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .pill.down {
+      color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .pill.flat {
+      color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.75fr);
+      gap: 14px;
+    }
+
+    .source-hub {
+      overflow: visible;
+    }
+
+    .source-focus-chart {
+      margin-bottom: 10px;
+    }
+
+    .source-detail-toggle {
+      border: 1px solid rgba(19, 33, 45, 0.12);
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.64);
+      margin-bottom: 14px;
+      overflow: hidden;
+    }
+
+    .source-detail-toggle summary {
+      cursor: pointer;
+      padding: 10px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: #214155;
+      list-style: none;
+      user-select: none;
+      border-bottom: 1px solid transparent;
+    }
+
+    .source-detail-toggle[open] summary {
+      border-bottom-color: rgba(19, 33, 45, 0.1);
+      background: rgba(15, 79, 115, 0.06);
+    }
+
+    .source-detail-toggle summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .source-detail-body {
+      padding: 10px 12px 12px;
+    }
+
+    .source-preview-cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .source-preview-card {
+      border: 1px solid rgba(19, 33, 45, 0.12);
+      border-radius: 14px;
+      padding: 10px 10px 9px;
+      background: rgba(255, 255, 255, 0.75);
+      cursor: pointer;
+      text-align: left;
+      transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+    }
+
+    .source-preview-card:hover {
+      border-color: rgba(15, 79, 115, 0.45);
+      transform: translateY(-1px);
+    }
+
+    .source-preview-card.active {
+      border-color: #0f4f73;
+      box-shadow: 0 0 0 2px rgba(15, 79, 115, 0.14);
+      background: rgba(244, 250, 253, 0.95);
+    }
+
+    .source-preview-name {
+      font-size: 12px;
+      color: #355266;
+      font-weight: 700;
+      line-height: 1.2;
+    }
+
+    .source-preview-value {
+      margin-top: 4px;
+      font-size: 30px;
+      line-height: 1;
+      font-weight: 800;
+      color: #142a39;
+    }
+
+    .source-preview-meta {
+      margin-top: 5px;
+      font-size: 11px;
+      color: #5e7384;
+      line-height: 1.3;
+    }
+
+    .panel {
+      border-radius: var(--radius-xl);
+      background: var(--paper);
+      border: 1px solid var(--line);
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .panel-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: flex-end;
+      padding: 20px 22px 0;
+      flex-wrap: wrap;
+    }
+
+    .panel-head p {
+      margin: 6px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .panel-body {
+      padding: 18px 22px 22px;
+    }
+
+    .verdict {
+      display: grid;
+      gap: 12px;
+    }
+
+    .verdict-box {
+      border-radius: 18px;
+      padding: 16px;
+      background:
+        linear-gradient(145deg, rgba(15, 79, 115, 0.08), rgba(255, 255, 255, 0.7));
+      border: 1px solid rgba(15, 79, 115, 0.08);
+    }
+
+    .verdict-box strong {
+      display: block;
+      font-size: 18px;
+      margin-bottom: 8px;
+    }
+
+    .verdict-box p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .chart-shell {
+      border-radius: 22px;
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      background:
+        linear-gradient(180deg, rgba(244, 250, 253, 0.95), rgba(255, 253, 249, 0.96));
+      padding: 16px;
+    }
+
+    .mini-chart-shell {
+      border-radius: 16px;
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      background:
+        linear-gradient(180deg, rgba(244, 250, 253, 0.95), rgba(255, 253, 249, 0.96));
+      padding: 10px 10px 6px;
+      margin-bottom: 12px;
+    }
+
+    .mini-chart {
+      width: 100%;
+      height: 260px;
+    }
+
+    .snapshot-gif-wrap {
+      position: relative;
+      border-radius: 16px;
+      border: 1px solid rgba(19, 33, 45, 0.1);
+      background: rgba(255, 255, 255, 0.72);
+      overflow: hidden;
+      margin-bottom: 10px;
+    }
+
+    .snapshot-gif {
+      width: 100%;
+      max-height: 440px;
+      object-fit: cover;
+      display: block;
+      background: #dbe5ee;
+    }
+
+    .snapshot-overlay {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      display: grid;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .snapshot-stamp,
+    .snapshot-countdown {
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 12px;
+      line-height: 1.3;
+      color: #f5fbff;
+      background: rgba(10, 33, 49, 0.72);
+      border: 1px solid rgba(216, 233, 245, 0.24);
+      box-shadow: 0 4px 12px rgba(10, 25, 36, 0.2);
+      backdrop-filter: blur(2px);
+    }
+
+    .snapshot-compare {
+      margin-bottom: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .snapshot-compare-btn {
+      border-radius: 999px;
+      border: 1px solid rgba(19, 33, 45, 0.16);
+      background: rgba(255, 255, 255, 0.84);
+      color: #264054;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .snapshot-compare-btn.active {
+      background: #0f4f73;
+      border-color: #0f4f73;
+      color: #f6fbff;
+    }
+
+    .snapshot-compare-btn:disabled {
+      opacity: 0.42;
+      cursor: not-allowed;
+    }
+
+    .snapshot-gif-meta {
+      padding: 8px 10px 2px;
+      font-size: 12px;
+      color: #5f7384;
+      min-height: 24px;
+    }
+
+    .snapshot-fixed-note {
+      margin-top: 2px;
+      font-size: 12px;
+      color: #5d7182;
+      line-height: 1.45;
+    }
+
+    .chart-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-top: 12px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .legend-dot {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      margin-right: 6px;
+    }
+
+    .svg-chart {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .infra-map {
+      width: 100%;
+      border-radius: 16px;
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      background: linear-gradient(180deg, rgba(246, 250, 253, 0.95), rgba(255, 252, 246, 0.96));
+      overflow: hidden;
+    }
+
+    .infra-map-image {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .infra-note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .axis-label {
+      fill: #667786;
+      font-size: 11px;
+      font-family: inherit;
+    }
+
+    .axis-line {
+      stroke: rgba(19, 33, 45, 0.08);
+      stroke-dasharray: 4 6;
+    }
+
+    .table {
+      display: grid;
+      gap: 10px;
+    }
+
+    .row {
+      display: grid;
+      grid-template-columns: 108px 90px 1fr;
+      gap: 10px;
+      align-items: center;
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(19, 33, 45, 0.08);
+    }
+
+    .row .date {
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .row .value {
+      font-size: 26px;
+      font-weight: 800;
+      line-height: 1;
+    }
+
+    .row .desc {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    .history-table {
+      width: 100%;
+      border-collapse: collapse;
+      border-radius: 14px;
+      overflow: hidden;
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      background: rgba(255, 255, 255, 0.68);
+      table-layout: fixed;
+    }
+
+    .history-table th,
+    .history-table td {
+      padding: 10px 12px;
+      border-bottom: 1px solid rgba(19, 33, 45, 0.08);
+      text-align: center;
+      font-size: 15px;
+      line-height: 1.4;
+      color: #1b2a36;
+    }
+
+    .history-table th {
+      background: rgba(15, 79, 115, 0.08);
+      font-size: 14px;
+      letter-spacing: 0.04em;
+      color: #38566d;
+      font-weight: 700;
+    }
+
+    .history-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .history-table th:first-child,
+    .history-table td:first-child {
+      width: 124px;
+      white-space: nowrap;
+    }
+
+    .history-table th:last-child,
+    .history-table td:last-child {
+      width: 86px;
+      min-width: 86px;
+      white-space: nowrap;
+      letter-spacing: 0;
+      font-size: 13px;
+      padding-left: 6px;
+      padding-right: 6px;
+    }
+
+    .source-remark {
+      margin-top: 10px;
+      font-size: 12px;
+      line-height: 1.55;
+      color: var(--muted);
+      background: rgba(255, 255, 255, 0.58);
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      border-radius: 12px;
+      padding: 10px 12px;
+    }
+
+    .chg-up {
+      color: #c62828;
+      font-weight: 700;
+    }
+
+    .chg-down {
+      color: #1f8e3d;
+      font-weight: 700;
+    }
+
+    .chg-flat {
+      color: #546473;
+      font-weight: 700;
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+    }
+
+    .timeline-item {
+      border-radius: 18px;
+      padding: 14px 16px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(19, 33, 45, 0.08);
+    }
+
+    .timeline-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    .timeline-item strong {
+      font-size: 16px;
+    }
+
+    .timeline-item p {
+      margin: 8px 0 0;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .attack-timeline {
+      position: relative;
+      display: grid;
+      gap: 14px;
+      margin-top: 2px;
+      padding: 2px 0;
+    }
+
+    .attack-timeline::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      transform: translateX(-50%);
+      background: rgba(15, 79, 115, 0.22);
+    }
+
+    .attack-day {
+      position: relative;
+      width: calc(50% - 26px);
+      border-radius: 14px;
+      border: 1px solid rgba(19, 33, 45, 0.1);
+      background: rgba(255, 255, 255, 0.72);
+      padding: 12px 14px 10px;
+    }
+
+    .attack-day.left {
+      margin-right: auto;
+    }
+
+    .attack-day.right {
+      margin-left: auto;
+    }
+
+    .attack-day::after {
+      content: "";
+      position: absolute;
+      top: 14px;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #0f4f73;
+      box-shadow: 0 0 0 3px rgba(15, 79, 115, 0.12);
+    }
+
+    .attack-day.left::after {
+      right: -31px;
+    }
+
+    .attack-day.right::after {
+      left: -31px;
+    }
+
+    .attack-day-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .attack-day-date {
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1;
+      color: #1b2a36;
+    }
+
+    .attack-day-count {
+      border-radius: 999px;
+      padding: 4px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #0f4f73;
+      background: rgba(15, 79, 115, 0.1);
+      border: 1px solid rgba(15, 79, 115, 0.14);
+    }
+
+    .attack-list {
+      margin: 0;
+      padding-left: 18px;
+      display: grid;
+      gap: 6px;
+    }
+
+    .attack-list li {
+      color: #2f3f4d;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+
+    .attack-list b {
+      color: #13212d;
+    }
+
+    .attack-timeline-actions {
+      margin-top: 12px;
+      display: flex;
+      justify-content: center;
+    }
+
+    .attack-toggle {
+      border: 1px solid rgba(19, 33, 45, 0.16);
+      background: rgba(255, 255, 255, 0.84);
+      color: #264054;
+      border-radius: 999px;
+      padding: 8px 16px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .attack-toggle:hover {
+      background: rgba(239, 247, 252, 0.95);
+      border-color: rgba(15, 79, 115, 0.36);
+    }
+
+    .storm-eye-head {
+      display: grid;
+      gap: 12px;
+    }
+
+    .storm-tags {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .storm-tag {
+      border: 1px solid rgba(19, 33, 45, 0.16);
+      background: rgba(255, 255, 255, 0.75);
+      color: #294356;
+      border-radius: 999px;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .storm-tag.active {
+      color: #f6fbff;
+      background: #0f4f73;
+      border-color: #0f4f73;
+    }
+
+    .storm-pane {
+      display: none;
+    }
+
+    .storm-pane.active {
+      display: block;
+    }
+
+    .storm-map-frame {
+      border-radius: 16px;
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.85);
+    }
+
+    .storm-commodity-wrap {
+      border-radius: 18px;
+      padding: 14px;
+      border: 1px solid rgba(170, 206, 228, 0.24);
+      background:
+        linear-gradient(135deg, rgba(11, 38, 57, 0.94), rgba(18, 44, 63, 0.9) 46%, rgba(64, 44, 26, 0.9) 100%);
+      color: #edf7ff;
+    }
+
+    .storm-commodity-summary {
+      margin: 0 0 12px;
+      font-size: 13px;
+      color: rgba(226, 240, 251, 0.78);
+    }
+
+    .commodity-panel {
+      background:
+        linear-gradient(135deg, rgba(11, 38, 57, 0.94), rgba(18, 44, 63, 0.9) 46%, rgba(64, 44, 26, 0.9) 100%);
+      border: 1px solid rgba(170, 206, 228, 0.24);
+      color: #edf7ff;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .commodity-panel .panel-head p {
+      color: rgba(226, 240, 251, 0.8);
+    }
+
+    .commodity-panel summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 18px 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .commodity-panel summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .commodity-toggle-copy {
+      display: grid;
+      gap: 6px;
+    }
+
+    .commodity-toggle-copy strong {
+      font-size: 20px;
+      line-height: 1.1;
+    }
+
+    .commodity-toggle-copy span {
+      font-size: 13px;
+      color: rgba(226, 240, 251, 0.78);
+    }
+
+    .commodity-toggle-chip {
+      flex-shrink: 0;
+      border-radius: 999px;
+      border: 1px solid rgba(199, 226, 245, 0.24);
+      background: rgba(5, 25, 39, 0.38);
+      padding: 8px 14px;
+      font-size: 12px;
+      font-weight: 700;
+      color: #f7fbff;
+    }
+
+    .commodity-panel[open] .commodity-toggle-chip::after {
+      content: "收起";
+    }
+
+    .commodity-panel:not([open]) .commodity-toggle-chip::after {
+      content: "展开";
+    }
+
+    .commodity-panel .panel-body {
+      padding-top: 0;
+    }
+
+    .commodity-top {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+
+    .commodity-kpi {
+      border-radius: 16px;
+      border: 1px solid rgba(199, 226, 245, 0.24);
+      background: rgba(5, 25, 39, 0.38);
+      padding: 12px 14px;
+    }
+
+    .commodity-kpi .k {
+      font-size: 11px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(223, 239, 250, 0.72);
+    }
+
+    .commodity-kpi .v {
+      margin-top: 6px;
+      font-size: 26px;
+      line-height: 1.05;
+      font-weight: 800;
+      color: #f9fcff;
+    }
+
+    .commodity-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .commodity-card {
+      border-radius: 18px;
+      border: 1px solid rgba(178, 211, 232, 0.2);
+      background: rgba(4, 20, 32, 0.46);
+      padding: 14px;
+      display: grid;
+      gap: 10px;
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.02);
+    }
+
+    .commodity-card.risk-extreme {
+      border-color: rgba(255, 128, 128, 0.5);
+      background: linear-gradient(180deg, rgba(80, 20, 23, 0.36), rgba(25, 17, 23, 0.44));
+    }
+
+    .commodity-card.risk-high {
+      border-color: rgba(255, 170, 107, 0.48);
+      background: linear-gradient(180deg, rgba(94, 44, 18, 0.34), rgba(25, 21, 21, 0.42));
+    }
+
+    .commodity-card.risk-midhigh {
+      border-color: rgba(255, 223, 141, 0.45);
+      background: linear-gradient(180deg, rgba(83, 69, 24, 0.32), rgba(24, 24, 20, 0.4));
+    }
+
+    .commodity-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .commodity-head strong {
+      font-size: 17px;
+      line-height: 1.2;
+    }
+
+    .risk-badge {
+      border-radius: 999px;
+      padding: 3px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      background: rgba(255, 255, 255, 0.16);
+      border: 1px solid rgba(255, 255, 255, 0.24);
+      white-space: nowrap;
+    }
+
+    .commodity-core {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .commodity-core .item {
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      padding: 8px 9px;
+    }
+
+    .commodity-core .label {
+      color: rgba(218, 236, 248, 0.72);
+      font-size: 10px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .commodity-core .value {
+      margin-top: 4px;
+      font-size: 17px;
+      font-weight: 800;
+      color: #f7fbff;
+    }
+
+    .commodity-meta {
+      font-size: 12px;
+      line-height: 1.55;
+      color: rgba(223, 239, 250, 0.86);
+    }
+
+    .commodity-note {
+      margin-top: 12px;
+      font-size: 12px;
+      color: rgba(219, 236, 248, 0.74);
+    }
+
+    .commodity-sources {
+      margin-top: 8px;
+      font-size: 12px;
+      color: rgba(219, 236, 248, 0.92);
+    }
+
+    .notes {
+      display: grid;
+      gap: 10px;
+    }
+
+    .note {
+      border-radius: 16px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.68);
+      border: 1px solid rgba(19, 33, 45, 0.08);
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .footer {
+      color: var(--muted);
+      font-size: 12px;
+      padding: 0 2px 24px;
+      text-align: center;
+    }
+
+    .footer-disclaimer {
+      margin-top: 6px;
+      color: #6d7984;
+      font-size: 12px;
+      line-height: 1.55;
+    }
+
+    code {
+      font-family: 'Source Han Sans', 'Noto Sans CJK SC', sans-serif;
+      font-size: 11px;
+      color: #1f465f;
+    }
+
+    @media (max-width: 1180px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .commodity-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 980px) {
+      .summary .metric.gauge-card {
+        aspect-ratio: auto;
+        border-radius: var(--radius-xl);
+        padding: 18px;
+        background: linear-gradient(180deg, rgba(255, 252, 247, 0.98), rgba(255, 246, 235, 0.92));
+        border: 1px solid rgba(19, 33, 45, 0.08);
+        box-shadow: var(--shadow);
+        overflow: hidden;
+      }
+
+      .summary .metric.gauge-card::before,
+      .summary .metric.gauge-card::after {
+        display: none;
+      }
+
+      .summary .metric.gauge-source .metric-multi-item {
+        border-radius: 12px;
+        min-height: 0;
+        padding: 8px 8px 7px;
+      }
+
+      .summary .metric.gauge-realtime .realtime-core {
+        grid-template-columns: 92px 1fr;
+      }
+
+      .summary .metric.gauge-realtime .realtime-breakdown-compact {
+        grid-column: 1 / -1;
+        max-width: 320px;
+        margin: 2px auto 0;
+      }
+
+    }
+
+    @media (max-width: 800px) {
+      body {
+        padding: 12px;
+      }
+
+      .hero {
+        padding: 22px 18px 20px;
+        border-radius: 24px;
+      }
+
+      .summary {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .metric {
+        grid-column: auto;
+      }
+
+      .realtime-kpis {
+        grid-template-columns: 1fr;
+      }
+
+      .metric.multi-source-card {
+        grid-column: 1 / -1;
+      }
+
+      .metric-multi {
+        gap: 6px;
+      }
+
+      .metric-multi-item {
+        padding: 7px 5px 6px;
+      }
+
+      .metric-multi-value {
+        font-size: 22px;
+      }
+
+      .metric-multi-date {
+        font-size: 8px;
+      }
+
+      .metric-multi-change {
+        font-size: 10px;
+      }
+
+      .market-item {
+        padding: 8px 12px;
+        font-size: 14px;
+      }
+
+      .stress-rank-row {
+        font-size: 11px;
+        padding: 5px 7px;
+      }
+
+      .row {
+        grid-template-columns: 1fr;
+      }
+
+      .commodity-top,
+      .commodity-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .mini-chart {
+        height: 220px;
+      }
+
+      .source-preview-cards {
+        grid-template-columns: 1fr;
+      }
+
+      .snapshot-overlay {
+        top: 8px;
+        left: 8px;
+        gap: 5px;
+      }
+
+      .snapshot-stamp,
+      .snapshot-countdown {
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+
+      .snapshot-compare {
+        gap: 6px;
+      }
+
+      .snapshot-compare-btn {
+        padding: 6px 10px;
+        font-size: 11px;
+      }
+
+      .history-table {
+        width: 100%;
+        table-layout: fixed;
+      }
+
+      .history-table th,
+      .history-table td {
+        padding: 7px 6px;
+        font-size: 12px;
+      }
+
+      .history-table th {
+        font-size: 11px;
+        line-height: 1.28;
+        white-space: normal;
+        word-break: break-word;
+      }
+
+      .history-table td {
+        line-height: 1.3;
+        white-space: normal;
+        word-break: break-word;
+      }
+
+      .history-table th:first-child,
+      .history-table td:first-child {
+        width: 90px;
+        white-space: nowrap;
+      }
+
+      .history-table th:last-child,
+      .history-table td:last-child {
+        width: 66px;
+        min-width: 66px;
+        font-size: 11px;
+        white-space: nowrap;
+        padding-left: 3px;
+        padding-right: 3px;
+      }
+
+      .attack-timeline::before {
+        left: 12px;
+        transform: none;
+      }
+
+      .attack-day,
+      .attack-day.left,
+      .attack-day.right {
+        width: calc(100% - 24px);
+        margin-left: 24px;
+        margin-right: 0;
+      }
+
+      .attack-day.left::after,
+      .attack-day.right::after {
+        left: -18px;
+        right: auto;
+      }
+
+    }
+
+    @media (max-width: 540px) {
+      .summary,
+      .tag-row {
+        grid-template-columns: 1fr;
+      }
+
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-top">
+        <div>
+          <h1>霍尔木兹海峡通行量仪表盘</h1>
+          <div class="tag-row">
+            <div class="tag" id="tag-status">当前状态：--</div>
+            <div class="tag" id="tag-sources">数据源：--</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="market-ticker" aria-label="重点行情滚动">
+      <div class="market-track">
+        <div class="market-segment">
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">布伦特原油</span>
+            <span class="price">100.96</span>
+            <span class="chg">+3.44%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">WTI原油</span>
+            <span class="price">97.580</span>
+            <span class="chg">+3.59%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">美元指数</span>
+            <span class="price">100.088</span>
+            <span class="chg">+0.28%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">现货黄金</span>
+            <span class="price">5013.09</span>
+            <span class="chg">+0.14%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">现货白银</span>
+            <span class="price">80.997</span>
+            <span class="chg">+0.35%</span>
+          </a>
+        </div>
+        <div class="market-segment" aria-hidden="true">
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">布伦特原油</span>
+            <span class="price">100.96</span>
+            <span class="chg">+3.44%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">WTI原油</span>
+            <span class="price">97.580</span>
+            <span class="chg">+3.59%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">美元指数</span>
+            <span class="price">100.088</span>
+            <span class="chg">+0.28%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">现货黄金</span>
+            <span class="price">5013.09</span>
+            <span class="chg">+0.14%</span>
+          </a>
+          <a class="market-item" href="https://www.tradinghero.com/" target="_blank" rel="noopener noreferrer">
+            <span class="name">现货白银</span>
+            <span class="price">80.997</span>
+            <span class="chg">+0.35%</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <section class="summary">
+      <article class="metric gauge-card gauge-realtime">
+        <p class="metric-label">海峡实时现状</p>
+        <div class="realtime-headline">
+          <div class="realtime-now">
+            <div class="realtime-now-value" id="metric-transiting-now">--</div>
+            <div class="realtime-now-label">当前在途船舶</div>
+          </div>
+        </div>
+        <div class="realtime-core">
+          <div class="realtime-rings" aria-hidden="true">
+            <span class="ring r1"></span>
+            <span class="ring r2"></span>
+            <span class="ring r3"></span>
+            <span class="ring r4"></span>
+          </div>
+          <div class="realtime-stranded-main">
+            <div class="realtime-stranded-value flat-tone" id="metric-stranded-total">--</div>
+            <div class="realtime-stranded-label">滞留船只</div>
+            <span class="pill flat realtime-kpi-change realtime-stranded-change-below" id="metric-stranded-change">--</span>
+          </div>
+          <div class="realtime-breakdown-compact">
+            <div class="rb-title">滞留船只分类</div>
+            <div class="rb-row">
+              <span class="rb-left"><span class="stranded-dot tankers"></span><span class="rb-name">油轮（滞留）</span></span>
+              <span id="metric-stranded-tankers">--</span>
+            </div>
+            <div class="rb-row">
+              <span class="rb-left"><span class="stranded-dot bulk"></span><span class="rb-name">散货船（滞留）</span></span>
+              <span id="metric-stranded-bulk">--</span>
+            </div>
+            <div class="rb-row">
+              <span class="rb-left"><span class="stranded-dot other"></span><span class="rb-name">其他（滞留）</span></span>
+              <span id="metric-stranded-other">--</span>
+            </div>
+          </div>
+        </div>
+        <div class="realtime-meta">
+          <div class="realtime-meta-row">
+            <span class="pill flat" id="metric-transiting-now-pill">截至 --</span>
+          </div>
+          <div class="realtime-meta-row">
+            <span id="metric-transiting-source">数据源：Hormuz Strait Monitor（实时）。</span>
+          </div>
+          <div class="realtime-meta-row">
+            <span id="metric-transiting-updated">更新时间（北京时间）：--</span>
+          </div>
+        </div>
+      </article>
+      <article class="metric multi-source-card gauge-card gauge-source">
+        <p class="metric-label">霍尔木兹海峡船只通行量日数据</p>
+        <div class="metric-multi" id="metric-multi-latest">
+          <div class="metric-multi-item">
+            <div class="metric-multi-name">UKMTO</div>
+            <div class="metric-multi-value" id="metric-ukmto-latest">--</div>
+            <div class="metric-multi-date" id="metric-ukmto-latest-date">--</div>
+            <div class="metric-multi-change chg-flat" id="metric-ukmto-change">较3/1 --</div>
+          </div>
+          <div class="metric-multi-item">
+            <div class="metric-multi-name">Windward</div>
+            <div class="metric-multi-value" id="metric-windward-latest">--</div>
+            <div class="metric-multi-date" id="metric-windward-latest-date">--</div>
+            <div class="metric-multi-change chg-flat" id="metric-windward-change">较3/1 --</div>
+          </div>
+          <div class="metric-multi-item">
+            <div class="metric-multi-name">Kpler</div>
+            <div class="metric-multi-value" id="metric-kpler-latest">--</div>
+            <div class="metric-multi-date" id="metric-kpler-latest-date">--</div>
+            <div class="metric-multi-change chg-flat" id="metric-kpler-change">较3/1 --</div>
+          </div>
+        </div>
+        <div class="metric-sub">
+          <span id="metric-ukmto-latest-meta">变化幅度按各自口径相对 2026-03-01 起点计算。</span>
+        </div>
+      </article>
+      <article class="metric gauge-card gauge-stress">
+        <div class="metric-help-floating" title="查看通行压力系数计算口径">
+          <button type="button" class="metric-help-trigger" aria-label="查看通行压力系数计算口径">?</button>
+          <div class="metric-help-panel">
+            <strong>通行压力系数计算口径</strong>
+            <div id="metric-stress-formula-main" class="formula-line">
+              通行压力系数 = (1 - 最新通行/7日均值) × 100%；品种压力系数 = 25 + 通行压力系数×0.6 + 全球海运占比×0.35 + 敏感度×8（上限99）。
+            </div>
+            <div class="formula-line">
+              系数解释：0.6 表示“海峡通行收缩”是主驱动；0.35 表示品种对海峡依赖度（全球海运占比）放大暴露；敏感度取值来自品种可替代性与运输刚性（范围约 0.55~1.00，LNG/LPG/甲醇等更高）。
+            </div>
+            <div class="formula-line">
+              评级映射：≥80 极高，65~79 高，50~64 中高，<50 中。
+            </div>
+            <div id="metric-stress-formula-current" class="formula-current">当前代入：--</div>
+          </div>
+        </div>
+        <p class="metric-label">通行压力系数</p>
+        <div class="metric-value" id="metric-stress">--</div>
+        <div class="stress-rank-head">高压品种排序</div>
+        <div id="metric-stress-ranking" class="stress-rank"></div>
+        <div class="metric-sub">
+          <span id="metric-stress-meta">按最新通行与近7日均值计算</span>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel full-span">
+        <div class="panel-head">
+          <div>
+            <h2>霍尔木兹海峡动态快照</h2>
+            <p id="snapshot-subtitle">来源：MarineTraffic实时数据</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="snapshot-gif-wrap">
+            <img id="snapshot-gif" class="snapshot-gif" alt="霍尔木兹海峡动态快照 GIF" />
+            <div class="snapshot-overlay">
+              <div id="snapshot-generated-at" class="snapshot-stamp">快照生成时间：--</div>
+              <div id="snapshot-next-update" class="snapshot-countdown">距下次更新还有 --</div>
+            </div>
+          </div>
+          <div id="snapshot-compare-controls" class="snapshot-compare"></div>
+          <div id="snapshot-gif-meta" class="snapshot-gif-meta">正在加载快照...</div>
+          <div id="snapshot-fixed-note" class="snapshot-fixed-note">固定视野口径：中心点与缩放比例保持一致（仅船只变化）。</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel full-span source-hub">
+        <div class="panel-head">
+          <div>
+            <h2 id="source-focus-title">霍尔木兹海峡船舶通行记录</h2>
+            <p id="source-focus-subtitle">来源：--</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div class="mini-chart-shell source-focus-chart">
+            <div id="trend-chart-focus" class="mini-chart" aria-label="霍尔木兹海峡通行趋势图"></div>
+          </div>
+          <details class="source-detail-toggle">
+            <summary>展开表格数据</summary>
+            <div class="source-detail-body">
+              <div id="data-table-focus" class="table"></div>
+              <div id="data-note-focus" class="source-remark">--</div>
+            </div>
+          </details>
+          <div id="source-preview-cards" class="source-preview-cards"></div>
+        </div>
+      </article>
+    </section>
+
+    <section class="flash-panel">
+      <div class="flash-head">
+        <div>
+          <h2>霍尔木兹海峡动态追踪</h2>
+        </div>
+      </div>
+      <div id="flash-date-tags" class="flash-date-tags"></div>
+      <div id="flash-list" class="flash-list"></div>
+      <div class="flash-pagination">
+        <button id="flash-prev" class="flash-nav" type="button" aria-label="上一页快讯">‹</button>
+        <div id="flash-dots" class="flash-dots" aria-label="快讯分页"></div>
+        <button id="flash-next" class="flash-nav" type="button" aria-label="下一页快讯">›</button>
+      </div>
+    </section>
+
+    <section class="grid">
+      <article class="panel full-span">
+        <div class="panel-head">
+          <div>
+            <h2>遇袭船只时间轴</h2>
+            <p>来源：战争研究所 (ISW) 等。</p>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="attack-timeline" class="attack-timeline"></div>
+          <div class="attack-timeline-actions">
+            <button id="attack-timeline-toggle" class="attack-toggle" type="button">展开其余日期</button>
+          </div>
+          <div class="source-remark">备注：此处为事件时间轴展示，按“遇袭日期”归组，同一日期下列出船名、船型与大致海域。遇袭地点密集分布于波斯湾、阿曼湾。</div>
+        </div>
+      </article>
+    </section>
+
+    <section class="grid">
+      <article class="panel full-span">
+        <div class="panel-head">
+          <div class="storm-eye-head">
+            <h2>伊朗-霍尔木兹风暴眼</h2>
+            <div class="storm-tags">
+              <button type="button" class="storm-tag active" data-target="storm-pane-map">基础设施分布图</button>
+              <button type="button" class="storm-tag" data-target="storm-pane-commodity">品种冲击热区</button>
+            </div>
+          </div>
+        </div>
+        <div class="panel-body">
+          <div id="storm-pane-map" class="storm-pane active">
+            <div class="storm-map-frame">
+              <img
+                class="infra-map-image"
+                src="./iran-oil-gas-infra.jpg"
+                alt="伊朗重要原油和天然气基础设施分布图"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div id="storm-pane-commodity" class="storm-pane">
+            <div class="storm-commodity-wrap">
+              <p id="commodity-summary" class="storm-commodity-summary">把“通行量收缩”映射到主要品种的供应链暴露度。</p>
+              <div class="commodity-top">
+                <div class="commodity-kpi">
+                  <div class="k">通行压力系数</div>
+                  <div class="v" id="commodity-stress">--</div>
+                </div>
+                <div class="commodity-kpi">
+                  <div class="k">最高风险品种</div>
+                  <div class="v" id="commodity-top-risk">--</div>
+                </div>
+                <div class="commodity-kpi">
+                  <div class="k">压力口径</div>
+                  <div class="v" id="commodity-basis" style="font-size:16px;font-weight:700;line-height:1.35;">--</div>
+                </div>
+              </div>
+              <div id="commodity-grid" class="commodity-grid"></div>
+              <div id="commodity-note" class="commodity-note">--</div>
+              <div id="commodity-sources" class="commodity-sources">--</div>
+            </div>
+          </div>
+        </div>
+      </article>
+    </section>
+
+    <div class="footer">
+      页面来源口径：UKMTO/JMIC + Windward + Hormuz Strait Monitor监测数据。
+      <div class="footer-disclaimer">免责声明：本页面仅供信息参考，不构成任何投资建议或交易依据。金十数据制作。</div>
+    </div>
+  </div>
+
+  <script src="./echarts.min.js"></script>
+  <script>
+    let data = null;
+    const AUTO_RELOAD_MS = 12 * 60 * 60 * 1000;
+    let reloadTimer = null;
+    let attackTimelineExpanded = false;
+    let flashPageIndex = 0;
+    let flashSelectedDate = null;
+    let activeSourceKey = "ukmto";
+    let snapshotCountdownTimer = null;
+    const FLASH_PAGE_SIZE = 3;
+    const HORMUZ_FLASH_FEED = {
+      "2026-03-16": [
+        { time: "18:48:44", text: "德国国防部长皮斯托里乌斯：德国不会派军队参与霍尔木兹海峡的安保工作。" },
+        { time: "18:46:20", text: "希腊政府官员：希腊无计划参与霍尔木兹海峡的军事行动。" },
+        { time: "18:38:20", text: "英国首相斯塔默：正与盟友合作，以恢复该霍尔木兹海峡地区的航行自由。" },
+        { time: "18:37:07", text: "市场消息：两艘美国海军扫雷舰“塔尔萨”号和“圣巴巴拉”号出现在马来西亚，尽管它们此前已被部署到巴林执行霍尔木兹海峡的扫雷任务。" },
+        { time: "18:31:23", text: "【伊朗外长：与美以的战争结束必须是彻底的】金十数据3月16日讯，据伊朗SNN通讯社报道，伊朗外长阿拉格齐周一表示，伊朗并未提出停火请求，伊朗希望确保与以色列和美国的战争能够彻底结束。阿拉格齐表示，霍尔木兹海峡只对“敌人以及那些支持其侵略行为的国家”关闭，未参与这场战争的国家能够通过该海峡，前提是需与伊朗武装部队进行协调并获得其许可。" },
+        { time: "18:24:20", text: "印度政府官员：印度正与伊朗就霍尔木兹海峡滞留船只的安全通行事宜进行磋商。" },
+        { time: "18:23:47", text: "卡塔尔外交部发言人：目前仍与各方保持沟通，以确保霍尔木兹海峡保持畅通，便于货物进入海湾地区并出口能源产品。" },
+        { time: "18:14:55", text: "丹麦外交部长在被问及美国就霍尔木兹海峡提出的要求时表示：我们必须以开放的心态，探讨如何为保障航运畅通作出贡献。" },
+        { time: "18:05:24", text: "美国白宫将于周一发布一份报告，显示遏制伊朗可能会大幅降低全球原油价格，因为这将消除与霍尔木兹海峡袭击或中断风险相关的长期“恐怖溢价”。" },
+        { time: "17:58:46", text: "印度外交部发言人：印美未就印度协助船只通行霍尔木兹海峡事宜举行双边会谈。" },
+        { time: "17:56:20", text: "伊朗外长阿拉格齐：霍尔木兹海峡只对“敌人和支持其侵略的人”关闭。" },
+        { time: "17:50:11", text: "伊朗外交部发言人：在伊朗军方的协调和许可下，已有未卷入战争的各方船只通过霍尔木兹海峡。" },
+        { time: "17:15:57", text: "【船舶追踪数据：一艘油轮驶离霍尔木兹海峡、前往巴基斯坦】金十数据3月16日讯，根据船舶追踪数据，一艘满载原油的油轮似乎已经驶过霍尔木兹海峡，目前正前往巴基斯坦。这是自美国和以色列对伊朗发动袭击以来，从波斯湾离开的众多船只中的一艘。船舶追踪数据显示，巴基斯坦国家航运公司控制的“卡拉奇（巴基斯坦最大港口）”于周日开始了这段危险的航行。到周一早上，这艘悬挂巴基斯坦国旗的“阿芙拉型油轮（Aframax）”出现在了阿曼湾哈尔附近的海域。巴基斯坦国家航运公司和石油部暂未作出回应。" }
+      ],
+      "2026-03-17": [
+        { time: "09:37:13", text: "韩国国防部：尚未收到向韩国军方提出的关于向霍尔木兹海峡派兵的正式请求。" },
+        { time: "08:17:58", text: "【中信证券：油价高位有望加速优质新能源车企出海】金十数据3月17日讯，中信证券指出，美伊战争正向着长期化方向发展，霍尔木兹海峡的“封锁”推动原油价格飙涨，中信证券认为原油价格持续高位将在全球范围内提升纯电与低增电混动车型竞争力，中国车企技术优势有望加速转化为全球份额。中信证券认为乘用车板块自2025年9月深度调整后，当前板块里，存储等二游成本对板块盈利的压力已充分定价，建议关注油价高位带来的国内优质新能源车企出海逻辑的重估，重点推荐具备明确出海增量的车企，以及国内高端车头部车企。" },
+        { time: "07:51:46", text: "日本防卫大臣小泉进次郎：尚未收到美国提出向霍尔木兹海峡派遣部队的具体请求。" },
+        { time: "06:51:09", text: "【知情人士称美军对伊朗冲突作战规划已包含“退出选项”】金十数据3月17日讯，多名知情人士透露，美国军方在制定对伊朗冲突的作战规划时，已为总统特朗普设置了多种“退出选项”，以便其在需要时结束冲突。据悉，随着中东局势持续升级，伊朗仍控制关键的霍尔木兹海峡，战争结束的时间表和条件仍存在很大不确定性。一些政府顾问主张制定退出策略，担忧战争引发全球经济不稳定；另一些则认为应借机削弱伊朗在地区的影响力。知情人士表示，这些“退出通道”已被纳入每日战争规划中。随着油价上涨以及外界质疑伊朗是否会接受美国提出的条件，政府内部对战争结束策略的讨论变得更加重要。" },
+        { time: "05:55:55", text: "【多国表示不参与霍尔木兹海峡护航 特朗普抱怨盟友“不帮忙”】金十数据3月17日讯，自美国和以色列对伊朗发动军事打击以来，霍尔木兹海峡航运近乎完全中断。美国总统特朗普曾计划宣布组建所谓“霍尔木兹联盟”，试图管控霍尔木兹海峡，并施压欧洲、亚洲及海湾国家派军舰参与。但截至目前，多国态度谨慎或明确拒绝，暂无国家公开响应美方呼吁。当地主时间3月16日，特朗普在白宫的一场活动中再次呼吁其他国家协助保障霍尔木兹海峡航行安全：“有些国家非常积极，有些则不那么积极。其中一些国家，我们多年来一直在帮助，还保护它们免受可怕的外部威胁，可它们的积极性并不高。”" },
+        { time: "05:28:33", text: "韩国外交部：韩国外交部长与美国国务卿鲁比奥讨论确保霍尔木兹海峡航行安全。" },
+        { time: "04:42:01", text: "美国总统特朗普信：我们并不清楚是否有任何水雷被布设在霍尔木兹海峡。" },
+        { time: "01:52:01", text: "【欧盟外长：中东战事“不是欧洲的战争”】金十数据3月17日讯，欧盟外交与安全政策高级代表卡拉斯16日在布鲁塞尔对媒体谈及中东战事时说，“这不是欧洲的战争”。她还表示，欧盟成员国无意将现有的“盾牌”海上护航行动扩展至霍尔木兹海峡。" }
+      ]
+    };
+    const ATTACKED_SHIP_RECORDS = [
+      { date: "2026-03-01", shipName: "Hercules Star", shipType: "成品油轮", seaArea: "波斯湾" },
+      { date: "2026-03-01", shipName: "未知", shipType: "疑似油轮", seaArea: "波斯湾" },
+      { date: "2026-03-01", shipName: "MKD Vyom", shipType: "原油轮", seaArea: "阿曼湾" },
+      { date: "2026-03-02", shipName: "Athe Nova", shipType: "沥青船", seaArea: "波斯湾" },
+      { date: "2026-03-02", shipName: "Stena Imperative", shipType: "成品油轮", seaArea: "波斯湾" },
+      { date: "2026-03-03", shipName: "Gold Oak", shipType: "散货船", seaArea: "阿曼湾" },
+      { date: "2026-03-03", shipName: "Libra Trader", shipType: "原油轮", seaArea: "阿曼湾" },
+      { date: "2026-03-03", shipName: "未知", shipType: "未知", seaArea: "阿拉伯海" },
+      { date: "2026-03-04", shipName: "Safeen Prestige", shipType: "集装箱船", seaArea: "波斯湾" },
+      { date: "2026-03-04", shipName: "MSC Grace", shipType: "集装箱船", seaArea: "波斯湾" },
+      { date: "2026-03-04", shipName: "未知", shipType: "油轮", seaArea: "波斯湾" },
+      { date: "2026-03-05", shipName: "未知", shipType: "原油轮", seaArea: "波斯湾" },
+      { date: "2026-03-06", shipName: "Mussafah 2", shipType: "油轮", seaArea: "波斯湾" },
+      { date: "2026-03-07", shipName: "Louise P", shipType: "成品油轮", seaArea: "波斯湾" },
+      { date: "2026-03-11", shipName: "Mayuree Naree", shipType: "散货船", seaArea: "波斯湾" },
+      { date: "2026-03-11", shipName: "One Majesty", shipType: "集装箱船", seaArea: "波斯湾" },
+      { date: "2026-03-11", shipName: "Star Gwyneth", shipType: "散货船", seaArea: "波斯湾" },
+      { date: "2026-03-11", shipName: "Express Rome", shipType: "集装箱船", seaArea: "波斯湾" },
+      { date: "2026-03-11", shipName: "未知", shipType: "未知", seaArea: "波斯湾" },
+      { date: "2026-03-11", shipName: "Source Blessing", shipType: "集装箱船", seaArea: "波斯湾" },
+      { date: "2026-03-12", shipName: "Zefyros", shipType: "成品油轮", seaArea: "波斯湾" },
+      { date: "2026-03-12", shipName: "Safesea Vishnu", shipType: "成品油轮", seaArea: "波斯湾" }
+    ];
+
+    function formatDate(value) {
+      return new Intl.DateTimeFormat("zh-CN", {
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date(value));
+    }
+
+    function formatSigned(value, digits = 1) {
+      if (value == null || Number.isNaN(value)) return "--";
+      const abs = Math.abs(value).toFixed(digits) + "%";
+      return value > 0 ? "+" + abs : value < 0 ? "-" + abs : "0.0%";
+    }
+
+    function formatCount(value) {
+      if (value == null || Number.isNaN(value)) return "--";
+      return Number(value).toLocaleString("zh-CN", {
+        maximumFractionDigits: Number.isInteger(Number(value)) ? 0 : 1
+      });
+    }
+
+    function formatFlow(value) {
+      if (value == null || Number.isNaN(value)) return "--";
+      return Number(value).toLocaleString("zh-CN", {
+        minimumFractionDigits: Number(value) < 10 ? 1 : 0,
+        maximumFractionDigits: Number(value) < 10 ? 1 : 1
+      });
+    }
+
+    function formatBeijingDateTime(value) {
+      if (!value) return "--";
+      const dt = new Date(value);
+      if (Number.isNaN(dt.getTime())) return "--";
+      const datePart = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(dt).replace(/\//g, "-");
+      const timePart = new Intl.DateTimeFormat("zh-CN", {
+        timeZone: "Asia/Shanghai",
+        hour: "2-digit",
+        minute: "2-digit",
+        second: "2-digit",
+        hour12: false
+      }).format(dt);
+      return datePart + " " + timePart;
+    }
+
+    function highlightHormuz(text) {
+      if (!text) return "";
+      return text.replace(/霍尔木兹海峡/g, "<span class=\"hl\">霍尔木兹海峡</span>");
+    }
+
+    function getFlashDates(feed) {
+      if (!feed || typeof feed !== "object") return [];
+      return Object.keys(feed).sort((a, b) => b.localeCompare(a));
+    }
+
+    function getBeijingDateString() {
+      return new Intl.DateTimeFormat("en-CA", {
+        timeZone: "Asia/Shanghai",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit"
+      }).format(new Date());
+    }
+
+    function pickDefaultFlashDate(dates) {
+      if (!Array.isArray(dates) || dates.length === 0) return null;
+      const today = getBeijingDateString();
+      if (dates.includes(today)) return today;
+      const nearestPast = dates.find((date) => date <= today);
+      return nearestPast || dates[0];
+    }
+
+    function renderFlashDateTags(dates) {
+      const wrap = document.getElementById("flash-date-tags");
+      if (!wrap) return;
+      if (!Array.isArray(dates) || dates.length === 0) {
+        wrap.innerHTML = "";
+        return;
+      }
+      wrap.innerHTML = dates.map((date) => (
+        `<button type="button" class="flash-date-tag ${date === flashSelectedDate ? "active" : ""}" data-date="${date}">${date}</button>`
+      )).join("");
+    }
+
+    function renderFlashNews(feed) {
+      const container = document.getElementById("flash-list");
+      const dotsWrap = document.getElementById("flash-dots");
+      const prevButton = document.getElementById("flash-prev");
+      const nextButton = document.getElementById("flash-next");
+      if (!container) return;
+
+      const dates = getFlashDates(feed);
+      if (!dates.length) {
+        container.innerHTML = "<div class=\"source-remark\">暂无快讯内容。</div>";
+        renderFlashDateTags([]);
+        if (dotsWrap) dotsWrap.innerHTML = "";
+        if (prevButton) prevButton.style.display = "none";
+        if (nextButton) nextButton.style.display = "none";
+        return;
+      }
+      if (!flashSelectedDate || !feed[flashSelectedDate]) {
+        flashSelectedDate = pickDefaultFlashDate(dates);
+        flashPageIndex = 0;
+      }
+      renderFlashDateTags(dates);
+
+      const items = Array.isArray(feed[flashSelectedDate]) ? feed[flashSelectedDate] : [];
+      if (!items.length) {
+        container.innerHTML = "<div class=\"source-remark\">该日期暂无快讯，后续更新将自动显示。</div>";
+        if (dotsWrap) dotsWrap.innerHTML = "";
+        if (prevButton) prevButton.style.display = "none";
+        if (nextButton) nextButton.style.display = "none";
+        return;
+      }
+
+      const totalPages = Math.max(1, Math.ceil(items.length / FLASH_PAGE_SIZE));
+      if (flashPageIndex >= totalPages) flashPageIndex = 0;
+      const start = flashPageIndex * FLASH_PAGE_SIZE;
+      const visibleItems = items.slice(start, start + FLASH_PAGE_SIZE);
+      container.innerHTML = visibleItems.map((item) => `
+        <article class="flash-item">
+          <p class="flash-text">${highlightHormuz(item.text || "")}</p>
+          <div class="flash-meta">
+            <span class="flash-dot" aria-hidden="true"></span>
+            <span>${item.time || "--"}</span>
+          </div>
+        </article>
+      `).join("");
+
+      if (dotsWrap) {
+        dotsWrap.innerHTML = Array.from({ length: totalPages }).map((_, idx) => (
+          `<button class="flash-page-dot ${idx === flashPageIndex ? "active" : ""}" data-page="${idx}" aria-label="第${idx + 1}页快讯"></button>`
+        )).join("");
+      }
+      if (prevButton && nextButton) {
+        const showPager = totalPages > 1;
+        prevButton.style.display = showPager ? "inline-flex" : "none";
+        nextButton.style.display = showPager ? "inline-flex" : "none";
+        prevButton.disabled = !showPager;
+        nextButton.disabled = !showPager;
+      }
+    }
+
+    function bindFlashPager(feed) {
+      const prevButton = document.getElementById("flash-prev");
+      const nextButton = document.getElementById("flash-next");
+      const dotsWrap = document.getElementById("flash-dots");
+      const dateWrap = document.getElementById("flash-date-tags");
+      if (!prevButton || !nextButton || !dotsWrap || dotsWrap.dataset.bound === "1") return;
+
+      prevButton.addEventListener("click", function () {
+        const items = Array.isArray(feed[flashSelectedDate]) ? feed[flashSelectedDate] : [];
+        const totalPages = Math.max(1, Math.ceil(items.length / FLASH_PAGE_SIZE));
+        flashPageIndex = (flashPageIndex - 1 + totalPages) % totalPages;
+        renderFlashNews(feed);
+      });
+      nextButton.addEventListener("click", function () {
+        const items = Array.isArray(feed[flashSelectedDate]) ? feed[flashSelectedDate] : [];
+        const totalPages = Math.max(1, Math.ceil(items.length / FLASH_PAGE_SIZE));
+        flashPageIndex = (flashPageIndex + 1) % totalPages;
+        renderFlashNews(feed);
+      });
+      dotsWrap.addEventListener("click", function (event) {
+        const target = event.target;
+        if (!(target instanceof HTMLElement)) return;
+        const page = target.getAttribute("data-page");
+        if (page == null) return;
+        flashPageIndex = Number(page);
+        renderFlashNews(feed);
+      });
+      if (dateWrap) {
+        dateWrap.addEventListener("click", function (event) {
+          const target = event.target;
+          if (!(target instanceof HTMLElement)) return;
+          const date = target.getAttribute("data-date");
+          if (!date) return;
+          if (date === flashSelectedDate) return;
+          flashSelectedDate = date;
+          flashPageIndex = 0;
+          renderFlashNews(feed);
+        });
+      }
+      dotsWrap.dataset.bound = "1";
+    }
+
+    function renderHero(summary) {
+      const tagStatus = document.getElementById("tag-status");
+      const tagChange = document.getElementById("tag-change");
+      const tagRealtime = document.getElementById("tag-realtime");
+      const tagSources = document.getElementById("tag-sources");
+      const safeRealtime = data && data.realtimeSignals ? data.realtimeSignals : {};
+      const latest24h = safeRealtime.shipCountLast24h != null ? safeRealtime.shipCountLast24h : summary.latestCrossings;
+      tagStatus.textContent = "当前状态：" + (summary.status || "--");
+      if (tagChange) {
+        tagChange.textContent = "日变化：" + formatSigned(summary.dayOverDayPct, 1);
+      }
+      if (tagRealtime) {
+        tagRealtime.textContent = "过去24h通行：" + formatCount(latest24h) + " 次";
+      }
+      if (tagSources) {
+        tagSources.textContent = "数据源：UKMTO/JMIC、Windward、Kpler、Hormuz Strait Monitor";
+      }
+    }
+
+    function computeUkmtoMetricSnapshot(sourceSeries) {
+      const records = sourceSeries && sourceSeries.ukmto && Array.isArray(sourceSeries.ukmto.records)
+        ? sourceSeries.ukmto.records
+        : [];
+      const cleaned = records
+        .map((row) => ({
+          date: row.date,
+          total: Number(row.totalCrossings)
+        }))
+        .filter((row) => row.date && !Number.isNaN(row.total))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      if (!cleaned.length) return null;
+
+      const latest = cleaned[cleaned.length - 1];
+      const previous = cleaned.length > 1 ? cleaned[cleaned.length - 2] : null;
+      const lookback = cleaned.slice(Math.max(0, cleaned.length - 7));
+      const sevenDayAvg = lookback.length
+        ? lookback.reduce((sum, item) => sum + item.total, 0) / lookback.length
+        : null;
+      const baseline = cleaned.find((item) => item.date === "2026-03-01") || cleaned[0];
+
+      return {
+        latestDate: latest.date,
+        latestValue: latest.total,
+        previousDate: previous ? previous.date : "--",
+        previousValue: previous ? previous.total : null,
+        dayOverDayPct: previous ? calcChange(latest.total, previous.total) : null,
+        sevenDayAvg,
+        gapPct: (sevenDayAvg != null && sevenDayAvg !== 0)
+          ? ((latest.total - sevenDayAvg) / sevenDayAvg) * 100
+          : null,
+        baselineDate: baseline ? baseline.date : "--",
+        baselineValue: baseline ? baseline.total : null,
+        collapsePct: (baseline && baseline.total !== 0)
+          ? ((latest.total - baseline.total) / baseline.total) * 100
+          : null
+      };
+    }
+
+    function computeSeriesLatestSnapshot(sourceSeries, key) {
+      const records = sourceSeries && sourceSeries[key] && Array.isArray(sourceSeries[key].records)
+        ? sourceSeries[key].records
+        : [];
+      const cleaned = records
+        .map((row) => ({
+          date: row.date,
+          total: Number(row.totalCrossings)
+        }))
+        .filter((row) => row.date && !Number.isNaN(row.total))
+        .sort((a, b) => a.date.localeCompare(b.date));
+      if (!cleaned.length) return null;
+      const latest = cleaned[cleaned.length - 1];
+      const baseline = cleaned.find((item) => item.date === "2026-03-01") || cleaned[0];
+      return {
+        latestDate: latest.date,
+        latestValue: latest.total,
+        baselineDate: baseline ? baseline.date : "--",
+        baselineValue: baseline ? baseline.total : null,
+        collapsePct: (baseline && baseline.total !== 0)
+          ? ((latest.total - baseline.total) / baseline.total) * 100
+          : null
+      };
+    }
+
+    function renderMetrics(summary, points, realtimeSignals, sourceSeries, commodityExposure) {
+      const safeRealtime = realtimeSignals || {};
+      const ukmto = computeSeriesLatestSnapshot(sourceSeries, "ukmto");
+      const windward = computeSeriesLatestSnapshot(sourceSeries, "windward");
+      const kpler = computeSeriesLatestSnapshot(sourceSeries, "kpler");
+
+      document.getElementById("metric-transiting-now").textContent = formatCount(safeRealtime.shipCountCurrentTransits);
+      document.getElementById("metric-transiting-now-pill").textContent = "截至 " + (summary.latestReportDate || "--");
+      document.getElementById("metric-transiting-source").textContent = "数据源：Hormuz Strait Monitor（实时）。";
+      document.getElementById("metric-transiting-updated").textContent =
+        "更新时间（北京时间）：" + formatBeijingDateTime(safeRealtime.lastUpdated);
+
+      const strandedTotal = safeRealtime.strandedVesselsTotal != null ? Number(safeRealtime.strandedVesselsTotal) : null;
+      const strandedChange = safeRealtime.strandedVesselsChangeToday != null ? Number(safeRealtime.strandedVesselsChangeToday) : null;
+      document.getElementById("metric-stranded-total").textContent = formatCount(strandedTotal);
+      document.getElementById("metric-stranded-total").className = "realtime-stranded-value " + (
+        strandedChange != null && strandedChange > 0 ? "rise" :
+        strandedChange != null && strandedChange < 0 ? "fall" : "flat-tone"
+      );
+      document.getElementById("metric-stranded-change").className = "pill realtime-kpi-change " + (
+        strandedChange != null && strandedChange > 0 ? "up" :
+        strandedChange != null && strandedChange < 0 ? "down" : "flat"
+      );
+      document.getElementById("metric-stranded-change").textContent =
+        "今日变化 " + (strandedChange == null || Number.isNaN(strandedChange) ? "--" : formatSigned(strandedChange, 0));
+      document.getElementById("metric-stranded-tankers").textContent = formatCount(safeRealtime.strandedVesselsTankers);
+      document.getElementById("metric-stranded-bulk").textContent = formatCount(safeRealtime.strandedVesselsBulkCarriers);
+      document.getElementById("metric-stranded-other").textContent = formatCount(safeRealtime.strandedVesselsOther);
+
+      document.getElementById("metric-ukmto-latest").textContent = formatCount(ukmto ? ukmto.latestValue : null);
+      document.getElementById("metric-ukmto-latest-date").textContent = ukmto ? ukmto.latestDate : "--";
+      document.getElementById("metric-windward-latest").textContent = formatCount(windward ? windward.latestValue : null);
+      document.getElementById("metric-windward-latest-date").textContent = windward ? windward.latestDate : "--";
+      document.getElementById("metric-kpler-latest").textContent = formatCount(kpler ? kpler.latestValue : null);
+      document.getElementById("metric-kpler-latest-date").textContent = kpler ? kpler.latestDate : "--";
+      document.getElementById("metric-ukmto-latest-meta").textContent =
+        "变化幅度按各自口径相对 2026-03-01 起点计算。";
+
+      const ukmtoChangeEl = document.getElementById("metric-ukmto-change");
+      const windwardChangeEl = document.getElementById("metric-windward-change");
+      const kplerChangeEl = document.getElementById("metric-kpler-change");
+      if (ukmtoChangeEl) {
+        ukmtoChangeEl.className = "metric-multi-change " + (ukmto && ukmto.collapsePct > 0 ? "chg-up" : ukmto && ukmto.collapsePct < 0 ? "chg-down" : "chg-flat");
+        ukmtoChangeEl.textContent = "较3/1 " + (ukmto ? formatSigned(ukmto.collapsePct, 1) : "--");
+      }
+      if (windwardChangeEl) {
+        windwardChangeEl.className = "metric-multi-change " + (windward && windward.collapsePct > 0 ? "chg-up" : windward && windward.collapsePct < 0 ? "chg-down" : "chg-flat");
+        windwardChangeEl.textContent = "较3/1 " + (windward ? formatSigned(windward.collapsePct, 1) : "--");
+      }
+      if (kplerChangeEl) {
+        kplerChangeEl.className = "metric-multi-change " + (kpler && kpler.collapsePct > 0 ? "chg-up" : kpler && kpler.collapsePct < 0 ? "chg-down" : "chg-flat");
+        kplerChangeEl.textContent = "较3/1 " + (kpler ? formatSigned(kpler.collapsePct, 1) : "--");
+      }
+
+      const stressPct = commodityExposure && commodityExposure.stressPct != null ? Number(commodityExposure.stressPct) : null;
+      document.getElementById("metric-stress").textContent = stressPct == null || Number.isNaN(stressPct)
+        ? "--"
+        : (formatCount(stressPct) + "%");
+      document.getElementById("metric-stress").className = "metric-value " + (stressPct != null && stressPct >= 70
+        ? "rise"
+        : stressPct != null && stressPct < 40
+          ? "fall"
+          : "flat-tone");
+      document.getElementById("metric-stress-meta").textContent =
+        commodityExposure && commodityExposure.stressBasis
+          ? commodityExposure.stressBasis
+          : "按最新通行与近7日均值计算";
+      const stressFormulaCurrentEl = document.getElementById("metric-stress-formula-current");
+      if (stressFormulaCurrentEl) {
+        const latestCrossings = summary && summary.latestCrossings != null ? Number(summary.latestCrossings) : null;
+        const weekAvg = summary && summary.sevenDayAverage != null ? Number(summary.sevenDayAverage) : null;
+        const ratioPart = (latestCrossings != null && weekAvg != null && !Number.isNaN(latestCrossings) && !Number.isNaN(weekAvg) && weekAvg > 0)
+          ? `当前代入：(${formatCount(weekAvg)} - ${formatCount(latestCrossings)}) / ${formatCount(weekAvg)} = ${formatCount(stressPct)}%`
+          : `当前代入：7日均值缺失，改用相对起点跌幅估算，结果 ${stressPct == null || Number.isNaN(stressPct) ? "--" : formatCount(stressPct) + "%"}。`;
+        stressFormulaCurrentEl.textContent = ratioPart;
+      }
+
+      const rankingWrap = document.getElementById("metric-stress-ranking");
+      if (rankingWrap) {
+        const rankedItems = commodityExposure && Array.isArray(commodityExposure.items)
+          ? [...commodityExposure.items]
+              .filter((item) => item && item.name && item.riskScore != null && !Number.isNaN(Number(item.riskScore)))
+              .sort((a, b) => Number(b.riskScore) - Number(a.riskScore))
+              .slice(0, 6)
+          : [];
+        rankingWrap.innerHTML = rankedItems.length
+          ? rankedItems.map((item, idx) => `
+              <div class="stress-rank-row">
+                <div class="stress-rank-left">
+                  <span class="stress-rank-index">${idx + 1}</span>
+                  <span class="stress-rank-name">${item.name}</span>
+                </div>
+                <span class="stress-rank-value">压力系数 ${Number(item.riskScore).toFixed(1)}%</span>
+              </div>
+            `).join("")
+          : `<div class="stress-rank-row"><span class="stress-rank-name">暂无品种压力数据</span></div>`;
+      }
+    }
+
+    function renderVerdict(summary) {
+      const title = document.getElementById("verdict-title");
+      const copy = document.getElementById("verdict-copy");
+      const latestShare = summary.sevenDayAverage
+        ? (summary.latestCrossings / summary.sevenDayAverage) * 100
+        : null;
+
+      if (summary.sevenDayAverage && latestShare < 30) {
+        title.textContent = "结论：日环比有小幅回升，但整体仍接近冻结。";
+      } else if (summary.dayOverDayPct < 0) {
+        title.textContent = "结论：通行量仍在继续走弱。";
+      } else {
+        title.textContent = "结论：短线有反弹，但没有回到正常水平。";
+      }
+
+      copy.textContent =
+        (summary.latestIsRolling24h
+          ? "截至 " + summary.latestReportDate + " 的过去24小时口径为 " + formatCount(summary.latestCrossings) + " 次通行。"
+          : "最新可见的霍尔木兹通行日为 " + summary.latestTrafficDate + "，共 " + formatCount(summary.latestCrossings) + " 次通行。") +
+        "相对前一日 " + formatCount(summary.previousCrossings) + " 次，原始数值是 " +
+        formatSigned(summary.dayOverDayPct, 1) + "；但相对 7 日均值 " + formatCount(summary.sevenDayAverage) +
+        " 次，仍低 " + formatSigned(Math.abs(summary.gapToWeekAveragePct), 1).replace("+", "") +
+        " 左右。也就是说，局部有回弹，但远谈不上恢复。";
+    }
+
+    function riskClass(level) {
+      if (level === "极高") return "risk-extreme";
+      if (level === "高") return "risk-high";
+      if (level === "中高") return "risk-midhigh";
+      return "";
+    }
+
+    function renderCommodityExposure(exposure) {
+      if (!exposure || !Array.isArray(exposure.items) || exposure.items.length === 0) {
+        return;
+      }
+
+      document.getElementById("commodity-stress").textContent = formatCount(exposure.stressPct) + "%";
+      document.getElementById("commodity-top-risk").textContent =
+        exposure.topRiskCommodity + " · " + exposure.topRiskScore.toFixed(1);
+      document.getElementById("commodity-basis").textContent = exposure.stressBasis || "--";
+      document.getElementById("commodity-summary").textContent =
+        "当前通行压力约 " + formatCount(exposure.stressPct) +
+        "%，最高风险品种：" + exposure.topRiskCommodity + "。";
+      document.getElementById("commodity-note").textContent = exposure.note || "";
+      document.getElementById("commodity-sources").textContent =
+        Array.isArray(exposure.referenceSources) && exposure.referenceSources.length > 0
+          ? "数据来源参考：" + exposure.referenceSources.join(", ")
+          : "";
+
+      const grid = document.getElementById("commodity-grid");
+      grid.innerHTML = exposure.items.map((item) => {
+        return `
+          <article class="commodity-card ${riskClass(item.riskLevel)}">
+            <div class="commodity-head">
+              <strong>${item.name}</strong>
+              <span class="risk-badge">${item.riskLevel} · ${item.riskScore.toFixed(1)}</span>
+            </div>
+            <div class="commodity-core">
+              <div class="item">
+                <div class="label">经海峡规模</div>
+                <div class="value">${formatFlow(item.flowValue)} ${item.flowUnit}</div>
+              </div>
+              <div class="item">
+                <div class="label">海运占比</div>
+                <div class="value">${item.globalSeaborneSharePct}%</div>
+              </div>
+              <div class="item">
+                <div class="label">估算受压规模</div>
+                <div class="value">${formatFlow(item.estimatedAtRiskFlow)} ${item.estimatedAtRiskUnit}</div>
+              </div>
+              <div class="item">
+                <div class="label">风险等级</div>
+                <div class="value">${item.riskLevel}</div>
+              </div>
+            </div>
+            <div class="commodity-meta">核心来源地：${item.sourceHubs}</div>
+            <div class="commodity-meta">主要流向：${item.majorDestinations}</div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function calcChange(current, previous) {
+      if (current == null || previous == null) return null;
+      if (Number(previous) === 0) return null;
+      return ((Number(current) - Number(previous)) / Number(previous)) * 100;
+    }
+
+    function renderChangeCell(changePct) {
+      if (changePct == null || Number.isNaN(changePct)) {
+        return '<span class="chg-flat">--</span>';
+      }
+      if (changePct > 0) {
+        return '<span class="chg-up">+' + changePct.toFixed(1) + '%</span>';
+      }
+      if (changePct < 0) {
+        return '<span class="chg-down">' + changePct.toFixed(1) + '%</span>';
+      }
+      return '<span class="chg-flat">0.0%</span>';
+    }
+
+    function buildSourceBundles(sourceSeries, fallbackPoints) {
+      const fallbackWindward = Array.isArray(fallbackPoints)
+        ? fallbackPoints.filter((point) => point.sourceType === "windward").map((point) => ({
+            date: point.trafficDate,
+            inboundCrossings: point.inbound,
+            outboundCrossings: point.outbound,
+            totalCrossings: point.crossings
+          }))
+        : [];
+      const windwardSeries =
+        sourceSeries && sourceSeries.windward && Array.isArray(sourceSeries.windward.records)
+          ? sourceSeries.windward
+          : { records: fallbackWindward, globalRemark: "" };
+      const ukmtoSeries = sourceSeries && sourceSeries.ukmto ? sourceSeries.ukmto : { records: [], globalRemark: "" };
+      const kplerSeries = sourceSeries && sourceSeries.kpler ? sourceSeries.kpler : { records: [], globalRemark: "" };
+
+      return {
+        ukmto: {
+          key: "ukmto",
+          title: "UKMTO/JMIC：霍尔木兹海峡船舶通行记录",
+          subtitle: "来源：英国联合海事资讯中心（JMIC/UKMTO）。",
+          seriesName: "UKMTO/JMIC 每日船舶总计",
+          type: "ukmto",
+          records: ukmtoSeries.records || [],
+          note: ukmtoSeries.globalRemark || "",
+          cardName: "UKMTO/JMIC"
+        },
+        windward: {
+          key: "windward",
+          title: "Windward：霍尔木兹海峡船舶通行记录",
+          subtitle: "来源：Windward数据。",
+          seriesName: "Windward 每日船舶总计",
+          type: "windward",
+          records: windwardSeries.records || [],
+          note: windwardSeries.globalRemark || "",
+          cardName: "Windward"
+        },
+        kpler: {
+          key: "kpler",
+          title: "Kpler：霍尔木兹海峡船舶通行记录",
+          subtitle: "来源：能源市场情报公司Kpler。",
+          seriesName: "Kpler 每日总通行量",
+          type: "kpler",
+          records: kplerSeries.records || [],
+          note: "数据说明：数据来源于 Kpler，展示穿越霍尔木兹海峡（SOH）的每日船只数量，并按风险等级划分为：被制裁船只（Sanctioned）、影子船只（Shadow）及其他常规船只（All rest）。",
+          cardName: "Kpler"
+        }
+      };
+    }
+
+    function buildFocusTableMarkup(type, records) {
+      if (!Array.isArray(records) || records.length === 0) {
+        return `
+          <div class="row">
+            <div class="date">--</div>
+            <div class="value">--</div>
+            <div class="desc">暂无可展示的历史记录。</div>
+          </div>
+        `;
+      }
+      const sorted = [...records].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      if (type === "ukmto") {
+        return `
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>货船通行总数</th>
+                <th>油轮通行总数</th>
+                <th>每日总计</th>
+                <th>变化幅度</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sorted.map((row, idx) => {
+                const prev = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+                const changePct = calcChange(row.totalCrossings, prev ? prev.totalCrossings : null);
+                return `
+                  <tr>
+                    <td>${row.date || "--"}</td>
+                    <td>${row.cargoCrossings == null ? "--" : formatCount(row.cargoCrossings)}</td>
+                    <td>${row.tankerCrossings == null ? "--" : formatCount(row.tankerCrossings)}</td>
+                    <td>${row.totalCrossings == null ? "--" : formatCount(row.totalCrossings)}</td>
+                    <td>${renderChangeCell(changePct)}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        `;
+      }
+      if (type === "windward") {
+        return `
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>日期</th>
+                <th>驶入总数</th>
+                <th>驶出总数</th>
+                <th>每日总计</th>
+                <th>变化幅度</th>
+              </tr>
+            </thead>
+            <tbody>
+              ${sorted.map((row, idx) => {
+                const prev = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+                const changePct = calcChange(row.totalCrossings, prev ? prev.totalCrossings : null);
+                return `
+                  <tr>
+                    <td>${row.date || "--"}</td>
+                    <td>${row.inboundCrossings == null ? "--" : formatCount(row.inboundCrossings)}</td>
+                    <td>${row.outboundCrossings == null ? "--" : formatCount(row.outboundCrossings)}</td>
+                    <td>${row.totalCrossings == null ? "--" : formatCount(row.totalCrossings)}</td>
+                    <td>${renderChangeCell(changePct)}</td>
+                  </tr>
+                `;
+              }).join("")}
+            </tbody>
+          </table>
+        `;
+      }
+      return `
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>被制裁船只</th>
+              <th>影子船只</th>
+              <th>其他常规船只</th>
+              <th>总通行量</th>
+              <th>变化幅度</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((row, idx) => {
+              const prev = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+              const changePct = calcChange(row.totalCrossings, prev ? prev.totalCrossings : null);
+              return `
+                <tr>
+                  <td>${row.date || "--"}</td>
+                  <td>${row.sanctionedVessels == null ? "--" : formatCount(row.sanctionedVessels)}</td>
+                  <td>${row.shadowVessels == null ? "--" : formatCount(row.shadowVessels)}</td>
+                  <td>${row.otherRegularVessels == null ? "--" : formatCount(row.otherRegularVessels)}</td>
+                  <td>${row.totalCrossings == null ? "--" : formatCount(row.totalCrossings)}</td>
+                  <td>${renderChangeCell(changePct)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+    }
+
+    function renderSourceHub(sourceSeries, fallbackPoints) {
+      const bundles = buildSourceBundles(sourceSeries, fallbackPoints);
+      const keys = ["ukmto", "windward", "kpler"].filter((key) => bundles[key]);
+      if (!keys.length) return;
+      if (!bundles[activeSourceKey]) {
+        activeSourceKey = keys[0];
+      }
+      const active = bundles[activeSourceKey];
+      const titleEl = document.getElementById("source-focus-title");
+      const subtitleEl = document.getElementById("source-focus-subtitle");
+      const tableEl = document.getElementById("data-table-focus");
+      const noteEl = document.getElementById("data-note-focus");
+      const cardsEl = document.getElementById("source-preview-cards");
+      if (!titleEl || !subtitleEl || !tableEl || !noteEl || !cardsEl) return;
+
+      titleEl.textContent = active.title;
+      subtitleEl.textContent = active.subtitle;
+      tableEl.innerHTML = buildFocusTableMarkup(active.type, active.records);
+      noteEl.textContent = active.note || "";
+
+      const chartPoints = (Array.isArray(active.records) ? active.records : [])
+        .map((row) => ({ trafficDate: row.date, crossings: Number(row.totalCrossings) }))
+        .filter((row) => row.trafficDate && !Number.isNaN(row.crossings))
+        .sort((a, b) => a.trafficDate.localeCompare(b.trafficDate));
+      renderInteractiveLineChart("trend-chart-focus", chartPoints, active.seriesName);
+
+      cardsEl.innerHTML = keys.map((key) => {
+        const bundle = bundles[key];
+        const sortedAsc = [...(bundle.records || [])]
+          .filter((row) => row && row.date != null && row.totalCrossings != null)
+          .sort((a, b) => String(a.date).localeCompare(String(b.date)));
+        const latest = sortedAsc.length ? sortedAsc[sortedAsc.length - 1] : null;
+        const prev = sortedAsc.length > 1 ? sortedAsc[sortedAsc.length - 2] : null;
+        const chg = latest && prev ? calcChange(latest.totalCrossings, prev.totalCrossings) : null;
+        return `
+          <button type="button" class="source-preview-card ${key === activeSourceKey ? "active" : ""}" data-source-key="${key}">
+            <div class="source-preview-name">${bundle.cardName}</div>
+            <div class="source-preview-value">${latest ? formatCount(latest.totalCrossings) : "--"}</div>
+            <div class="source-preview-meta">${latest ? latest.date : "--"} ${chg == null ? "" : ("· " + formatSigned(chg, 1))}</div>
+          </button>
+        `;
+      }).join("");
+
+      Array.from(cardsEl.querySelectorAll("[data-source-key]")).forEach((button) => {
+        button.addEventListener("click", function () {
+          const key = button.getAttribute("data-source-key");
+          if (!key || key === activeSourceKey) return;
+          activeSourceKey = key;
+          renderSourceHub(sourceSeries, fallbackPoints);
+        });
+      });
+    }
+
+    function renderWindwardHistoryTable(series) {
+      const tableWrap = document.getElementById("data-table-windward");
+      const noteWrap = document.getElementById("data-note-windward");
+      if (!tableWrap) return;
+      const records = series && Array.isArray(series.records) ? series.records : [];
+      if (records.length === 0) {
+        tableWrap.innerHTML = `
+          <div class="row">
+            <div class="date">--</div>
+            <div class="value">--</div>
+            <div class="desc">暂无可展示的历史记录。</div>
+          </div>
+        `;
+        if (noteWrap) noteWrap.textContent = "";
+        return;
+      }
+
+      const sorted = [...records].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      tableWrap.innerHTML = `
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>驶入总数</th>
+              <th>驶出总数</th>
+              <th>每日总计</th>
+              <th>变化幅度</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((row, idx) => {
+              const prev = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+              const changePct = calcChange(row.totalCrossings, prev ? prev.totalCrossings : null);
+              return `
+                <tr>
+                  <td>${row.date || "--"}</td>
+                  <td>${row.inboundCrossings == null ? "--" : formatCount(row.inboundCrossings)}</td>
+                  <td>${row.outboundCrossings == null ? "--" : formatCount(row.outboundCrossings)}</td>
+                  <td>${row.totalCrossings == null ? "--" : formatCount(row.totalCrossings)}</td>
+                  <td>${renderChangeCell(changePct)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+      if (noteWrap) {
+        noteWrap.textContent = series && series.globalRemark ? series.globalRemark : "";
+      }
+    }
+
+    function renderUkmtoHistoryTable(series) {
+      const tableWrap = document.getElementById("data-table-ukmto");
+      const noteWrap = document.getElementById("data-note-ukmto");
+      if (!tableWrap) return;
+      const records = series && Array.isArray(series.records) ? series.records : [];
+      if (records.length === 0) {
+        tableWrap.innerHTML = `
+          <div class="row">
+            <div class="date">--</div>
+            <div class="value">--</div>
+            <div class="desc">暂无可展示的历史记录。</div>
+          </div>
+        `;
+        if (noteWrap) noteWrap.textContent = "";
+        return;
+      }
+
+      const sorted = [...records].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      tableWrap.innerHTML = `
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>货船通行总数</th>
+              <th>油轮通行总数</th>
+              <th>每日总计</th>
+              <th>变化幅度</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((row, idx) => {
+              const prev = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+              const changePct = calcChange(row.totalCrossings, prev ? prev.totalCrossings : null);
+              return `
+                <tr>
+                  <td>${row.date || "--"}</td>
+                  <td>${row.cargoCrossings == null ? "--" : formatCount(row.cargoCrossings)}</td>
+                  <td>${row.tankerCrossings == null ? "--" : formatCount(row.tankerCrossings)}</td>
+                  <td>${row.totalCrossings == null ? "--" : formatCount(row.totalCrossings)}</td>
+                  <td>${renderChangeCell(changePct)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+      if (noteWrap) {
+        noteWrap.textContent = series && series.globalRemark ? series.globalRemark : "";
+      }
+    }
+
+    function renderKplerHistoryTable(series) {
+      const tableWrap = document.getElementById("data-table-kpler");
+      const noteWrap = document.getElementById("data-note-kpler");
+      if (!tableWrap) return;
+      const records = series && Array.isArray(series.records) ? series.records : [];
+      if (records.length === 0) {
+        tableWrap.innerHTML = `
+          <div class="row">
+            <div class="date">--</div>
+            <div class="value">--</div>
+            <div class="desc">暂无可展示的历史记录。</div>
+          </div>
+        `;
+        if (noteWrap) noteWrap.textContent = "";
+        return;
+      }
+
+      const sorted = [...records].sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+      tableWrap.innerHTML = `
+        <table class="history-table">
+          <thead>
+            <tr>
+              <th>日期</th>
+              <th>被制裁船只</th>
+              <th>影子船只</th>
+              <th>其他常规船只</th>
+              <th>总通行量</th>
+              <th>变化幅度</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${sorted.map((row, idx) => {
+              const prev = idx < sorted.length - 1 ? sorted[idx + 1] : null;
+              const changePct = calcChange(row.totalCrossings, prev ? prev.totalCrossings : null);
+              return `
+                <tr>
+                  <td>${row.date || "--"}</td>
+                  <td>${row.sanctionedVessels == null ? "--" : formatCount(row.sanctionedVessels)}</td>
+                  <td>${row.shadowVessels == null ? "--" : formatCount(row.shadowVessels)}</td>
+                  <td>${row.otherRegularVessels == null ? "--" : formatCount(row.otherRegularVessels)}</td>
+                  <td>${row.totalCrossings == null ? "--" : formatCount(row.totalCrossings)}</td>
+                  <td>${renderChangeCell(changePct)}</td>
+                </tr>
+              `;
+            }).join("")}
+          </tbody>
+        </table>
+      `;
+      if (noteWrap) {
+        noteWrap.textContent =
+          "数据说明：数据来源于 Kpler，展示穿越霍尔木兹海峡（SOH）的每日船只数量，并按风险等级划分为：被制裁船只（Sanctioned）、影子船只（Shadow）及其他常规船只（All rest）。";
+      }
+    }
+
+    function renderSourceTables(sourceSeries, fallbackPoints) {
+      const fallbackWindward = Array.isArray(fallbackPoints)
+        ? fallbackPoints.filter((point) => point.sourceType === "windward").map((point) => ({
+            date: point.trafficDate,
+            inboundCrossings: point.inbound,
+            outboundCrossings: point.outbound,
+            totalCrossings: point.crossings
+          }))
+        : [];
+      const windwardSeries =
+        sourceSeries && sourceSeries.windward && Array.isArray(sourceSeries.windward.records)
+          ? sourceSeries.windward
+          : { records: fallbackWindward, globalRemark: "" };
+      const ukmtoSeries = sourceSeries && sourceSeries.ukmto ? sourceSeries.ukmto : { records: [], globalRemark: "" };
+      const kplerSeries = sourceSeries && sourceSeries.kpler ? sourceSeries.kpler : { records: [], globalRemark: "" };
+
+      renderUkmtoHistoryTable(ukmtoSeries);
+      renderWindwardHistoryTable(windwardSeries);
+      renderKplerHistoryTable(kplerSeries);
+    }
+
+    function renderAttackTimeline(records) {
+      const container = document.getElementById("attack-timeline");
+      const toggleButton = document.getElementById("attack-timeline-toggle");
+      if (!container) return;
+      if (!Array.isArray(records) || records.length === 0) {
+        container.innerHTML = "<div class=\"note\">暂无可展示的遇袭船只记录。</div>";
+        if (toggleButton) toggleButton.style.display = "none";
+        return;
+      }
+
+      const grouped = {};
+      records.forEach((item) => {
+        const date = item.date || "未知日期";
+        if (!grouped[date]) grouped[date] = [];
+        grouped[date].push(item);
+      });
+
+      const dates = Object.keys(grouped).sort((a, b) => b.localeCompare(a));
+      const visibleDates = attackTimelineExpanded ? dates : dates.slice(0, 2);
+      container.innerHTML = visibleDates.map((date, idx) => {
+        const dayItems = grouped[date];
+        const sideClass = idx % 2 === 0 ? "left" : "right";
+        const listHtml = dayItems.map((row) => {
+          const ship = row.shipName || "未知";
+          const shipType = row.shipType || "未知";
+          const sea = row.seaArea || "未知海域";
+          return `<li><b>${ship}</b>｜${shipType}｜${sea}</li>`;
+        }).join("");
+        return `
+          <article class="attack-day ${sideClass}">
+            <div class="attack-day-head">
+              <div class="attack-day-date">${date}</div>
+              <span class="attack-day-count">${dayItems.length} 艘</span>
+            </div>
+            <ul class="attack-list">${listHtml}</ul>
+          </article>
+        `;
+      }).join("");
+
+      if (toggleButton) {
+        if (dates.length <= 2) {
+          toggleButton.style.display = "none";
+        } else {
+          toggleButton.style.display = "inline-flex";
+          toggleButton.textContent = attackTimelineExpanded
+            ? "收起其余日期"
+            : "展开其余 " + (dates.length - 2) + " 个日期";
+        }
+      }
+    }
+
+    function bindAttackTimelineToggle(records) {
+      const toggleButton = document.getElementById("attack-timeline-toggle");
+      if (!toggleButton || toggleButton.dataset.bound === "1") return;
+      toggleButton.addEventListener("click", function () {
+        attackTimelineExpanded = !attackTimelineExpanded;
+        renderAttackTimeline(records);
+      });
+      toggleButton.dataset.bound = "1";
+    }
+
+    function buildPointNarrative(point, previousPoint) {
+      if (!point.exact) {
+        return "这是 Windward 对过去 24 小时的近似口径，不是完整日终结算；这里主要把它当作骤降前的参考基线。";
+      }
+
+      const isRealtimePoint = point.sourceType === "realtime" || point.isRolling24h;
+      const parts = [
+        isRealtimePoint
+          ? "第三方监测数据在 " + point.reportDate + " 更新时显示过去24小时霍尔木兹通行为 " + formatCount(point.crossings) + " 次（滚动口径）"
+          : "Windward 在 " + point.reportDate + " 发布的日报里记录了 " + formatCount(point.crossings) + " 次霍尔木兹通行"
+      ];
+
+      if (point.inbound != null || point.outbound != null) {
+        const split = [];
+        if (point.inbound != null) split.push(point.inbound + " 艘入湾");
+        if (point.outbound != null) split.push(point.outbound + " 艘出海");
+        if (point.other != null) split.push(point.other + " 艘其他/未分类");
+        parts.push("方向拆分为 " + split.join("、"));
+      }
+
+      if (point.sevenDayAverage != null) {
+        const ratio = (point.crossings / point.sevenDayAverage) * 100;
+        parts.push("只相当于 7 日均值的 " + ratio.toFixed(1) + "%");
+      }
+
+      if (previousPoint && previousPoint.crossings) {
+        const change = ((point.crossings - previousPoint.crossings) / previousPoint.crossings) * 100;
+        parts.push("相对前一通行日变动 " + formatSigned(change, 1));
+      }
+
+      return parts.join("，") + "。";
+    }
+
+    function parseSnapshotDate(value) {
+      if (!value) return null;
+      const dt = new Date(value);
+      return Number.isNaN(dt.getTime()) ? null : dt;
+    }
+
+    function pickNearestSnapshotBefore(entries, targetMs) {
+      if (!Array.isArray(entries) || entries.length === 0 || !Number.isFinite(targetMs)) return null;
+      const candidates = entries.filter((item) => Number.isFinite(item.tsMs) && item.tsMs <= targetMs);
+      if (!candidates.length) return null;
+      candidates.sort((a, b) => Math.abs(a.tsMs - targetMs) - Math.abs(b.tsMs - targetMs));
+      return candidates[0];
+    }
+
+    function formatSnapshotCountdown(msToNext) {
+      if (!Number.isFinite(msToNext) || msToNext <= 0) return "距下次更新还有 0 小时";
+      const totalMinutes = Math.ceil(msToNext / 60000);
+      const hours = Math.floor(totalMinutes / 60);
+      const minutes = totalMinutes % 60;
+      return "距下次更新还有 " + hours + " 小时" + (minutes ? (" " + minutes + " 分钟") : "");
+    }
+
+    function renderSnapshotAssets(snapshotAssets, realtimeSignals) {
+      const gifEl = document.getElementById("snapshot-gif");
+      const gifMetaEl = document.getElementById("snapshot-gif-meta");
+      const subtitleEl = document.getElementById("snapshot-subtitle");
+      const generatedEl = document.getElementById("snapshot-generated-at");
+      const nextUpdateEl = document.getElementById("snapshot-next-update");
+      const compareWrap = document.getElementById("snapshot-compare-controls");
+      const fixedNoteEl = document.getElementById("snapshot-fixed-note");
+      if (!gifEl || !gifMetaEl || !generatedEl || !nextUpdateEl || !compareWrap || !fixedNoteEl) return;
+
+      if (snapshotCountdownTimer) {
+        clearInterval(snapshotCountdownTimer);
+        snapshotCountdownTimer = null;
+      }
+
+      const assets = snapshotAssets || {};
+      const frames = Array.isArray(assets.frames) ? assets.frames : [];
+      const hasGif = typeof assets.gifPath === "string" && assets.gifPath.length > 0;
+      const staticPreviewPath = (typeof assets.staticPreviewPath === "string" && assets.staticPreviewPath.trim())
+        ? assets.staticPreviewPath.trim()
+        : "https://img.jin10.com/news/26/03/zU9femLAOwlPyN2MEJuxe.jpg";
+      const builtinPreviewPath = "./iran-oil-gas-infra.jpg";
+      const sourceText = assets.source || "MarineTraffic实时数据";
+      const updateIntervalHours = Number(assets.updateIntervalHours) > 0 ? Number(assets.updateIntervalHours) : 6;
+
+      if (subtitleEl) {
+        subtitleEl.textContent = "来源：" + sourceText;
+      }
+
+      const viewport = assets.viewport || {};
+      const centerLon = viewport.centerLon != null ? Number(viewport.centerLon).toFixed(1) : "56.2";
+      const centerLat = viewport.centerLat != null ? Number(viewport.centerLat).toFixed(1) : "26.3";
+      const zoomLevel = viewport.zoom != null ? viewport.zoom : 9;
+      fixedNoteEl.textContent = "注意：快照图每六个小时更新一次。";
+
+      const normalizedFrames = frames
+        .map((frame) => {
+          const parsed = parseSnapshotDate(frame && frame.capturedAt);
+          return {
+            path: frame && frame.path ? String(frame.path) : null,
+            capturedAt: parsed ? parsed.toISOString() : null,
+            tsMs: parsed ? parsed.getTime() : NaN
+          };
+        })
+        .filter((item) => item.path)
+        .sort((a, b) => (Number.isFinite(b.tsMs) ? b.tsMs : -Infinity) - (Number.isFinite(a.tsMs) ? a.tsMs : -Infinity));
+
+      const generatedAtCandidate = parseSnapshotDate(
+        assets.generatedAt || assets.updatedAt || (realtimeSignals && realtimeSignals.lastUpdated)
+      );
+      const currentEntry = normalizedFrames[0] || {
+        path: hasGif ? assets.gifPath : staticPreviewPath,
+        capturedAt: generatedAtCandidate ? generatedAtCandidate.toISOString() : null,
+        tsMs: generatedAtCandidate ? generatedAtCandidate.getTime() : NaN
+      };
+      const currentTsMs = Number.isFinite(currentEntry.tsMs) ? currentEntry.tsMs : NaN;
+      const prev6Entry = pickNearestSnapshotBefore(normalizedFrames, currentTsMs - (6 * 60 * 60 * 1000));
+      const prev24Entry = pickNearestSnapshotBefore(normalizedFrames, currentTsMs - (24 * 60 * 60 * 1000));
+
+      const compareViews = {
+        current: { label: "当前快照", entry: currentEntry },
+        prev6h: { label: "上一期快照（6小时前）", entry: prev6Entry },
+        prev24h: { label: "昨日同期快照", entry: prev24Entry }
+      };
+
+      const setImageWithFallback = (path) => {
+        const targetPath = (path && String(path).trim()) ? String(path).trim() : staticPreviewPath;
+        let usedBuiltinFallback = false;
+        gifEl.src = targetPath + "?t=" + Date.now();
+        gifEl.alt = "霍尔木兹海峡动态快照";
+        gifEl.style.display = "block";
+        gifEl.onerror = () => {
+          if (!usedBuiltinFallback) {
+            usedBuiltinFallback = true;
+            gifEl.src = builtinPreviewPath + "?t=" + Date.now();
+            gifMetaEl.textContent = "快照源暂不可用，已临时展示示意底图。";
+            return;
+          }
+          gifEl.style.display = "none";
+          gifMetaEl.textContent = "快照加载失败，请检查图片路径或网络。";
+        };
+      };
+
+      const referenceDate = parseSnapshotDate(currentEntry && currentEntry.capturedAt) || generatedAtCandidate;
+      const refreshCountdown = () => {
+        if (!referenceDate) {
+          nextUpdateEl.textContent = "距下次更新还有 --";
+          return;
+        }
+        const intervalMs = updateIntervalHours * 60 * 60 * 1000;
+        const nowMs = Date.now();
+        let nextMs = referenceDate.getTime() + intervalMs;
+        while (nextMs <= nowMs) nextMs += intervalMs;
+        nextUpdateEl.textContent = formatSnapshotCountdown(nextMs - nowMs);
+      };
+
+      const applyCompareView = (key) => {
+        const view = compareViews[key] || compareViews.current;
+        const fallbackToCurrent = view.entry || compareViews.current.entry;
+        setImageWithFallback(fallbackToCurrent ? fallbackToCurrent.path : staticPreviewPath);
+        const tsText = fallbackToCurrent && fallbackToCurrent.capturedAt
+          ? formatBeijingDateTime(fallbackToCurrent.capturedAt)
+          : "--";
+        generatedEl.textContent = "快照生成时间：" + tsText;
+        gifMetaEl.textContent = "";
+        compareWrap.querySelectorAll(".snapshot-compare-btn").forEach((btn) => {
+          btn.classList.toggle("active", btn.dataset.compare === key);
+        });
+      };
+
+      compareWrap.innerHTML = Object.entries(compareViews).map(([key, view]) => `
+        <button
+          type="button"
+          class="snapshot-compare-btn ${key === "current" ? "active" : ""}"
+          data-compare="${key}"
+          ${view.entry ? "" : "disabled"}
+        >${view.label}</button>
+      `).join("");
+      compareWrap.querySelectorAll(".snapshot-compare-btn").forEach((button) => {
+        button.addEventListener("click", () => applyCompareView(button.dataset.compare));
+      });
+
+      applyCompareView("current");
+      refreshCountdown();
+      snapshotCountdownTimer = setInterval(refreshCountdown, 60 * 1000);
+    }
+
+    function renderTimeline(points) {
+      const container = document.getElementById("timeline");
+      if (!container) return;
+      container.innerHTML = points.map((point, index) => {
+        const previousPoint = index > 0 ? points[index - 1] : null;
+        const badge = point.isRolling24h ? "滚动24h" : (point.exact ? "精确日值" : "近似口径");
+        const badgeClass = point.isRolling24h ? "flat" : (point.exact ? "up" : "flat");
+        const displayDate = point.isRolling24h ? ("截至 " + point.reportDate) : point.trafficDate;
+        return `
+          <div class="timeline-item">
+            <div class="timeline-top">
+              <strong>${displayDate} · ${formatCount(point.crossings)} 次通行</strong>
+              <span class="pill ${badgeClass}">${badge}</span>
+            </div>
+            <p>${buildPointNarrative(point, previousPoint)}</p>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function renderFooter(summary) {
+      document.getElementById("footer-article").textContent = summary.latestArticleDate || summary.latestReportDate;
+      document.getElementById("footer-report").textContent = summary.latestReportDate;
+      document.getElementById("footer-traffic").textContent = summary.latestIsRolling24h
+        ? ("滚动24h截至 " + summary.latestReportDate)
+        : summary.latestTrafficDate;
+    }
+
+    function renderInteractiveLineChart(containerId, points, seriesName) {
+      const container = document.getElementById(containerId);
+      if (!container) return;
+      if (!Array.isArray(points) || points.length === 0) {
+        container.innerHTML = "<div class=\"infra-note\">暂无可绘制的历史序列。</div>";
+        return;
+      }
+      if (!window.echarts) {
+        container.innerHTML = "<div class=\"infra-note\">未加载 ECharts，无法展示动态走势图。</div>";
+        return;
+      }
+
+      let chart = window.echarts.getInstanceByDom(container);
+      if (chart) {
+        chart.dispose();
+      }
+      chart = window.echarts.init(container);
+
+      const xData = points.map((point) => point.trafficDate || point.date || "--");
+      const yData = points.map((point) => Number(point.crossings));
+      chart.setOption({
+        animationDuration: 550,
+        color: ["#0f4f73"],
+        tooltip: {
+          trigger: "axis",
+          axisPointer: { type: "line" },
+          formatter: function (params) {
+            const p = params && params[0] ? params[0] : null;
+            if (!p) return "";
+            return p.axisValue + "<br/>" + seriesName + "：" + formatCount(p.data) + " 艘";
+          }
+        },
+        grid: { left: 44, right: 18, top: 20, bottom: 56 },
+        xAxis: {
+          type: "category",
+          data: xData,
+          axisLabel: { color: "#667786", fontSize: 11 },
+          axisLine: { lineStyle: { color: "rgba(19,33,45,0.2)" } }
+        },
+        yAxis: {
+          type: "value",
+          minInterval: 1,
+          axisLabel: { color: "#667786", fontSize: 11 },
+          splitLine: { lineStyle: { color: "rgba(19,33,45,0.08)", type: "dashed" } }
+        },
+        dataZoom: [
+          { type: "inside", start: 0, end: 100 },
+          { type: "slider", height: 16, bottom: 12, start: 0, end: 100, borderColor: "rgba(19,33,45,0.12)" }
+        ],
+        series: [
+          {
+            name: seriesName,
+            type: "line",
+            data: yData,
+            smooth: true,
+            symbol: "circle",
+            symbolSize: 7,
+            lineStyle: { width: 3 },
+            areaStyle: { color: "rgba(15,79,115,0.12)" }
+          }
+        ]
+      });
+
+      window.addEventListener("resize", function () {
+        const inst = window.echarts.getInstanceByDom(container);
+        if (inst) inst.resize();
+      });
+    }
+
+    function renderSourceCharts(sourceSeries, fallbackPoints) {
+      const ukmtoRecords = sourceSeries && sourceSeries.ukmto && Array.isArray(sourceSeries.ukmto.records)
+        ? sourceSeries.ukmto.records
+        : [];
+      const windwardRecords = sourceSeries && sourceSeries.windward && Array.isArray(sourceSeries.windward.records)
+        ? sourceSeries.windward.records
+        : (Array.isArray(fallbackPoints)
+          ? fallbackPoints.filter((point) => point.sourceType === "windward").map((point) => ({
+              date: point.trafficDate,
+              totalCrossings: point.crossings
+            }))
+          : []);
+      const kplerRecords = sourceSeries && sourceSeries.kpler && Array.isArray(sourceSeries.kpler.records)
+        ? sourceSeries.kpler.records
+        : [];
+
+      const ukmtoPoints = ukmtoRecords
+        .map((row) => ({ trafficDate: row.date, crossings: Number(row.totalCrossings) }))
+        .filter((row) => !Number.isNaN(row.crossings))
+        .sort((a, b) => a.trafficDate.localeCompare(b.trafficDate));
+      const windwardPoints = windwardRecords
+        .map((row) => ({ trafficDate: row.date, crossings: Number(row.totalCrossings) }))
+        .filter((row) => !Number.isNaN(row.crossings))
+        .sort((a, b) => a.trafficDate.localeCompare(b.trafficDate));
+      const kplerPoints = kplerRecords
+        .map((row) => ({ trafficDate: row.date, crossings: Number(row.totalCrossings) }))
+        .filter((row) => !Number.isNaN(row.crossings))
+        .sort((a, b) => a.trafficDate.localeCompare(b.trafficDate));
+
+      renderInteractiveLineChart("trend-chart-ukmto", ukmtoPoints, "UKMTO/JMIC 每日船舶总计");
+      renderInteractiveLineChart("trend-chart-windward", windwardPoints, "Windward 每日船舶总计");
+      renderInteractiveLineChart("trend-chart-kpler", kplerPoints, "Kpler 每日总通行量");
+    }
+
+    function bindStormEyeTabs() {
+      const tags = Array.from(document.querySelectorAll(".storm-tag"));
+      const panes = Array.from(document.querySelectorAll(".storm-pane"));
+      if (!tags.length || !panes.length || tags[0].dataset.bound === "1") return;
+      tags.forEach((tag) => {
+        tag.addEventListener("click", function () {
+          const targetId = tag.getAttribute("data-target");
+          tags.forEach((item) => item.classList.toggle("active", item === tag));
+          panes.forEach((pane) => pane.classList.toggle("active", pane.id === targetId));
+        });
+      });
+      tags.forEach((tag) => {
+        tag.dataset.bound = "1";
+      });
+    }
+
+    function scheduleAutoReload() {
+      if (reloadTimer) {
+        window.clearTimeout(reloadTimer);
+      }
+      reloadTimer = window.setTimeout(() => window.location.reload(), AUTO_RELOAD_MS);
+    }
+
+    function init() {
+      data = window.HORMUZ_FLOW_DATA;
+      if (!data || !data.summary || !Array.isArray(data.points)) {
+        document.body.innerHTML = "<div style=\"padding:24px;font-family:'Source Han Sans','Noto Sans CJK SC',sans-serif;\">未找到有效数据文件：请先生成 <code>hormuz-flow-data.js</code>。</div>";
+        return;
+      }
+      renderHero(data.summary);
+      renderMetrics(data.summary, data.points, data.realtimeSignals, data.sourceSeries, data.commodityExposure);
+      renderSnapshotAssets(data.snapshotAssets, data.realtimeSignals);
+      renderFlashNews(HORMUZ_FLASH_FEED);
+      bindFlashPager(HORMUZ_FLASH_FEED);
+      renderCommodityExposure(data.commodityExposure);
+      renderSourceHub(data.sourceSeries, data.points);
+      renderAttackTimeline(ATTACKED_SHIP_RECORDS);
+      bindAttackTimelineToggle(ATTACKED_SHIP_RECORDS);
+      renderTimeline(data.points);
+      renderFooter(data.summary);
+      bindStormEyeTabs();
+      scheduleAutoReload();
+    }
+
+    (function bootstrapData() {
+      bindStormEyeTabs();
+      const script = document.createElement("script");
+      script.src = "./hormuz-flow-data.js?t=" + Date.now();
+      script.onload = init;
+      script.onerror = function () {
+        document.body.innerHTML = "<div style=\"padding:24px;font-family:'Source Han Sans','Noto Sans CJK SC',sans-serif;\">数据文件加载失败：<code>hormuz-flow-data.js</code>。</div>";
+      };
+      document.head.appendChild(script);
+    })();
+  </script>
+</body>
+</html>
